@@ -1,7 +1,7 @@
-import { Link, useParams, Navigate } from 'react-router-dom';
-import { AppRoute } from '../../app/routes';
+import { Link, useParams } from 'react-router-dom';
 import CommentForm from '../../components/comment-form';
 import { Offer } from '../../types/offer';
+import NotFoundPage from '../not-found-page';
 
 type OfferPageProps = {
   offers: Offer[];
@@ -14,7 +14,7 @@ function OfferPage({ offers }: OfferPageProps): JSX.Element {
   const currentOffer = offers.find((offer) => offer.id === offerId);
 
   if (!currentOffer) {
-    return <Navigate to={AppRoute.NotFound} />;
+    return <NotFoundPage />;
   }
 
   const {
