@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import OfferList from '../../components/offer-list';
+import Map from '../../components/map';
 import { Offer } from '../../types/offer';
-import { AppRoute } from '../../app/routes';
 
 type MainPageProps = {
   offers: Offer[];
@@ -10,9 +9,7 @@ type MainPageProps = {
 
 function MainPage({ offers }: MainPageProps): JSX.Element {
   const offersCount = offers.length;
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_activeOfferId, setActiveOfferId] = useState<number | null>(null);
+  const [activeOfferId, setActiveOfferId] = useState<number | null>(null);
 
   const handleCardMouseEnter = (offerId: number) => {
     setActiveOfferId(offerId);
@@ -22,37 +19,11 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
     setActiveOfferId(null);
   };
 
+  const selectedPoint = offers.find((offer) => offer.id === activeOfferId);
+  const city = offers[0]?.city;
+
   return (
     <div className="page page--gray page--main">
-      <header className="header">
-        <div className="container">
-          <div className="header__wrapper">
-            <div className="header__left">
-              <Link className="header__logo-link header__logo-link--active" to={AppRoute.Main}>
-                <img className="header__logo" src="img/logo.svg" alt="6 cities logo" width="81" height="41" />
-              </Link>
-            </div>
-            <nav className="header__nav">
-              <ul className="header__nav-list">
-                <li className="header__nav-item user">
-                  <Link className="header__nav-link header__nav-link--profile" to={AppRoute.Favorites}>
-                    <div className="header__avatar-wrapper user__avatar-wrapper">
-                    </div>
-                    <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
-                    <span className="header__favorite-count">3</span>
-                  </Link>
-                </li>
-                <li className="header__nav-item">
-                  <Link className="header__nav-link" to={AppRoute.Main}>
-                    <span className="header__signout">Sign out</span>
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       <main className="page__main page__main--index">
         <h1 className="visually-hidden">Cities</h1>
         <div className="tabs">
@@ -119,7 +90,14 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
               />
             </section>
             <div className="cities__right-section">
-              <section className="cities__map map"></section>
+              {city && (
+                <Map
+                  city={city}
+                  points={offers}
+                  selectedPoint={selectedPoint}
+                  className="cities__map"
+                />
+              )}
             </div>
           </div>
         </div>

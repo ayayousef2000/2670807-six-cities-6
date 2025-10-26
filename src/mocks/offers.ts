@@ -84,8 +84,8 @@ export const offers: Offer[] = [
     },
     description: 'Enjoy stunning views of the famous Prinsengracht canal from this modern and spacious apartment.',
     location: {
-      latitude: 52.3709553943508,
-      longitude: 4.90309666406198,
+      latitude: 52.3909553943508,
+      longitude: 4.929309666406198,
       zoom: 16
     },
     city: {

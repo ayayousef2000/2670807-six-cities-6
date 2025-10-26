@@ -1,3 +1,12 @@
+export type City = {
+  name: string;
+  location: {
+    latitude: number;
+    longitude: number;
+    zoom: number;
+  };
+};
+
 export type Offer = {
   id: number;
   images: string[];
@@ -21,12 +30,5 @@ export type Offer = {
     longitude: number;
     zoom: number;
   };
-  city: {
-    name: string;
-    location: {
-      latitude: number;
-      longitude: number;
-      zoom: number;
-    };
-  };
+  city: City;
 };
