@@ -1,11 +1,15 @@
-import { Link, useParams, Navigate } from 'react-router-dom';
-import { AppRoute } from '../../app/routes';
+import { useParams } from 'react-router-dom';
 import CommentForm from '../../components/comment-form';
+import Map from '../../components/map';
+import OfferList from '../../components/offer-list';
+import ReviewsList from '../../components/reviews-list';
+import { reviews } from '../../mocks/reviews';
 import { Offer } from '../../types/offer';
+import NotFoundPage from '../not-found-page';
 
 type OfferPageProps = {
   offers: Offer[];
-}
+};
 
 function OfferPage({ offers }: OfferPageProps): JSX.Element {
   const { id } = useParams();
@@ -14,7 +18,7 @@ function OfferPage({ offers }: OfferPageProps): JSX.Element {
   const currentOffer = offers.find((offer) => offer.id === offerId);
 
   if (!currentOffer) {
-    return <Navigate to={AppRoute.NotFound} />;
+    return <NotFoundPage />;
   }
 
   const {
@@ -34,6 +38,7 @@ function OfferPage({ offers }: OfferPageProps): JSX.Element {
 
   const ratingWidth = `${(rating / 5) * 100}%`;
   const nearPlaces = offers.filter((offer) => offer.id !== offerId).slice(0, 3);
+  const mapPoints = [...nearPlaces, currentOffer];
 
   return (
     <div className="page">
@@ -102,57 +107,24 @@ function OfferPage({ offers }: OfferPageProps): JSX.Element {
                 </div>
               </div>
               <section className="offer__reviews reviews">
-                <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">1</span></h2>
-                <ul className="reviews__list">
-                </ul>
+                <ReviewsList reviews={reviews} />
                 <CommentForm />
               </section>
             </div>
           </div>
-          <section className="offer__map map"></section>
+          <section className="offer__map map">
+            <Map
+              city={currentOffer.city}
+              points={mapPoints}
+              selectedPoint={currentOffer}
+              className="offer__map"
+            />
+          </section>
         </section>
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            <div className="near-places__list places__list">
-              {nearPlaces.map((place) => {
-                const placeRatingWidth = `${(place.rating / 5) * 100}%`;
-                return (
-                  <article className="near-places__card place-card" key={place.id}>
-                    {place.isPremium && <div className="place-card__mark"><span>Premium</span></div>}
-                    <div className="near-places__image-wrapper place-card__image-wrapper">
-                      <Link to={`/offer/${place.id}`}>
-                        <img className="place-card__image" src={`../${place.images[0]}`} width="260" height="200" alt={place.title} />
-                      </Link>
-                    </div>
-                    <div className="place-card__info">
-                      <div className="place-card__price-wrapper">
-                        <div className="place-card__price">
-                          <b className="place-card__price-value">&euro;{place.price}</b>
-                          <span className="place-card__price-text">&#47;&nbsp;night</span>
-                        </div>
-                        <button className={`place-card__bookmark-button ${place.isFavorite ? 'place-card__bookmark-button--active' : ''} button`} type="button">
-                          <svg className="place-card__bookmark-icon" width="18" height="19">
-                            <use xlinkHref="#icon-bookmark"></use>
-                          </svg>
-                          <span className="visually-hidden">To bookmarks</span>
-                        </button>
-                      </div>
-                      <div className="place-card__rating rating">
-                        <div className="place-card__stars rating__stars">
-                          <span style={{ width: placeRatingWidth }}></span>
-                          <span className="visually-hidden">Rating</span>
-                        </div>
-                      </div>
-                      <h2 className="place-card__name">
-                        <Link to={`/offer/${place.id}`}>{place.title}</Link>
-                      </h2>
-                      <p className="place-card__type">{place.type}</p>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+            <OfferList offers={nearPlaces} variant="near-places" />
           </section>
         </div>
       </main>

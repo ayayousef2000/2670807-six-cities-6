@@ -1,13 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Offer } from '../../types/offer';
 
+type CardVariant = 'cities' | 'near-places';
+
 type OfferCardProps = {
   offer: Offer;
-  onMouseEnter: (offerId: number) => void;
-  onMouseLeave: () => void;
-}
+  variant?: CardVariant;
+  onMouseEnter?: (offerId: number) => void;
+  onMouseLeave?: () => void;
+};
 
-function OfferCard({ offer, onMouseEnter, onMouseLeave }: OfferCardProps): JSX.Element {
+function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: OfferCardProps): JSX.Element {
   const {
     id,
     isPremium,
@@ -23,16 +26,16 @@ function OfferCard({ offer, onMouseEnter, onMouseLeave }: OfferCardProps): JSX.E
   const ratingWidth = `${(rating / 5) * 100}%`;
 
   const handleMouseEnter = () => {
-    onMouseEnter(id);
+    onMouseEnter?.(id);
   };
 
   const handleMouseLeave = () => {
-    onMouseLeave();
+    onMouseLeave?.();
   };
 
   return (
     <article
-      className="cities__card place-card"
+      className={`${variant}__card place-card`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -41,9 +44,9 @@ function OfferCard({ offer, onMouseEnter, onMouseLeave }: OfferCardProps): JSX.E
           <span>Premium</span>
         </div>
       )}
-      <div className="cities__image-wrapper place-card__image-wrapper">
+      <div className={`${variant}__image-wrapper place-card__image-wrapper`}>
         <Link to={`/offer/${id}`}>
-          <img className="place-card__image" src={previewImage} width="260" height="200" alt={title} />
+          <img className="place-card__image" src={`../${previewImage}`} width="260" height="200" alt={title} />
         </Link>
       </div>
       <div className="place-card__info">
