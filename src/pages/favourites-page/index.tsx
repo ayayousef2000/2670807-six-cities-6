@@ -1,15 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Offer } from '../../types/offer';
+import { useSelector } from 'react-redux';
 import { AppRoute } from '../../app/routes';
 import { useFavorites } from '../../hooks/use-favorites';
+import { RootState } from '../../store';
 
-type FavoritesPageProps = {
-  offers: Offer[];
-}
 
-function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
+function FavoritesPage(): JSX.Element {
+  const offers = useSelector((state: RootState) => state.offers.offers);
   const { favoritesByCity } = useFavorites(offers);
-
   return (
     <div className="page">
       <main className="page__main page__main--favorites">

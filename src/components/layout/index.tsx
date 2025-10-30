@@ -1,20 +1,18 @@
 import { Outlet } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import Header from '../header';
 import { useFavorites } from '../../hooks/use-favorites';
-import { Offer } from '../../types/offer';
+import { RootState } from '../../store';
 
-type LayoutProps = {
-  offers: Offer[];
-};
 
-function Layout({ offers }: LayoutProps): JSX.Element {
+function Layout(): JSX.Element {
+  const offers = useSelector((state: RootState) => state.offers.offers);
   const { favoriteOffers } = useFavorites(offers);
-
   return (
-    <>
+    <div className="page">
       <Header favoriteCount={favoriteOffers.length} />
       <Outlet />
-    </>
+    </div>
   );
 }
 
