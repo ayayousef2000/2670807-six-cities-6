@@ -1,21 +1,20 @@
 import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import CommentForm from '../../components/comment-form';
 import Map from '../../components/map';
 import OfferList from '../../components/offer-list';
 import ReviewsList from '../../components/reviews-list';
 import { reviews } from '../../mocks/reviews';
-import { Offer } from '../../types/offer';
 import NotFoundPage from '../not-found-page';
+import { RootState } from '../../store';
 
-type OfferPageProps = {
-  offers: Offer[];
-};
 
-function OfferPage({ offers }: OfferPageProps): JSX.Element {
+function OfferPage(): JSX.Element {
+  const allOffers = useSelector((state: RootState) => state.offers.offers);
   const { id } = useParams();
   const offerId = Number(id);
 
-  const currentOffer = offers.find((offer) => offer.id === offerId);
+  const currentOffer = allOffers.find((offer) => offer.id === offerId);
 
   if (!currentOffer) {
     return <NotFoundPage />;
@@ -37,7 +36,7 @@ function OfferPage({ offers }: OfferPageProps): JSX.Element {
   } = currentOffer;
 
   const ratingWidth = `${(rating / 5) * 100}%`;
-  const nearPlaces = offers.filter((offer) => offer.id !== offerId).slice(0, 3);
+  const nearPlaces = allOffers.filter((offer) => offer.id !== offerId).slice(0, 3);
   const mapPoints = [...nearPlaces, currentOffer];
 
   return (
@@ -97,13 +96,27 @@ function OfferPage({ offers }: OfferPageProps): JSX.Element {
                 <h2 className="offer__host-title">Meet the host</h2>
                 <div className="offer__host-user user">
                   <div className={`offer__avatar-wrapper ${host.isPro ? 'offer__avatar-wrapper--pro' : ''} user__avatar-wrapper`}>
-                    <img className="offer__avatar user__avatar" src={`../${host.avatarUrl}`} width="74" height="74" alt="Host avatar" />
+                    <img
+                      className="offer__avatar user__avatar"
+                      src={`../${host.avatarUrl}`}
+                      width={74}
+                      height={74}
+                      alt="Host avatar"
+                    />
                   </div>
-                  <span className="offer__user-name">{host.name}</span>
-                  {host.isPro && <span className="offer__user-status">Pro</span>}
+                  <span className="offer__user-name">
+                    {host.name}
+                  </span>
+                  {host.isPro && (
+                    <span className="offer__user-status">
+                      Pro
+                    </span>
+                  )}
                 </div>
                 <div className="offer__description">
-                  {description.split('\n\n').map((paragraph) => <p className="offer__text" key={paragraph}>{paragraph}</p>)}
+                  <p className="offer__text">
+                    {description}
+                  </p>
                 </div>
               </div>
               <section className="offer__reviews reviews">
