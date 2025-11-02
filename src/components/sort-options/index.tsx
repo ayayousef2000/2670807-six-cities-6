@@ -1,0 +1,54 @@
+import { useState, memo } from 'react';
+import { SortOptions as SortOptionsEnum } from '../../const';
+
+type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
+
+type SortOptionsProps = {
+  currentSort: SortOption;
+  onSortChange: (sortType: SortOption) => void;
+};
+
+function SortOptions({ currentSort, onSortChange }: SortOptionsProps): JSX.Element {
+  const [isOpened, setIsOpened] = useState(false);
+
+  const handleSortTypeClick = (sortType: SortOption) => {
+    onSortChange(sortType);
+    setIsOpened(false);
+  };
+
+  const sortOptions = Object.values(SortOptionsEnum);
+
+  return (
+    <form className="places__sorting" action="#" method="get">
+      <span className="places__sorting-caption">Sort by </span>
+      <span
+        className="places__sorting-type"
+        tabIndex={0}
+        onClick={() => setIsOpened((prevIsOpened) => !prevIsOpened)}
+      >
+        {currentSort}
+        <svg className="places__sorting-arrow" width="7" height="4">
+          <use xlinkHref="#icon-arrow-select"></use>
+        </svg>
+      </span>
+      <ul
+        className={`places__options places__options--custom ${isOpened ? 'places__options--opened' : ''}`}
+      >
+        {sortOptions.map((sortType) => (
+          <li
+            key={sortType}
+            className={`places__option ${currentSort === sortType ? 'places__option--active' : ''}`}
+            tabIndex={0}
+            onClick={() => handleSortTypeClick(sortType)}
+          >
+            {sortType}
+          </li>
+        ))}
+      </ul>
+    </form>
+  );
+}
+
+const SortOptionsMemo = memo(SortOptions);
+
+export default SortOptionsMemo;

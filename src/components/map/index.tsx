@@ -27,6 +27,7 @@ const currentCustomIcon = new Icon({
 function Map({ city, points, selectedPoint, className }: MapProps): JSX.Element {
   const mapRef = useRef(null);
   const map = useMap(mapRef, city);
+  const markersRef = useRef<Record<number, Marker>>({});
 
   useEffect(() => {
     if (map) {
@@ -37,20 +38,33 @@ function Map({ city, points, selectedPoint, className }: MapProps): JSX.Element 
           lng: point.location.longitude
         });
 
-        marker
-          .setIcon(
-            point.id === selectedPoint?.id
-              ? currentCustomIcon
-              : defaultCustomIcon
-          )
-          .addTo(markerLayer);
+        marker.setIcon(defaultCustomIcon);
+
+        marker.addTo(markerLayer);
+        markersRef.current[point.id] = marker;
       });
 
       return () => {
         map.removeLayer(markerLayer);
+        markersRef.current = {};
       };
     }
-  }, [map, points, selectedPoint]);
+  }, [map, points]);
+
+  useEffect(() => {
+    if (map) {
+      Object.values(markersRef.current).forEach((marker) => {
+        marker.setIcon(defaultCustomIcon);
+      });
+
+      if (selectedPoint) {
+        const selectedMarker = markersRef.current[selectedPoint.id];
+        if (selectedMarker) {
+          selectedMarker.setIcon(currentCustomIcon);
+        }
+      }
+    }
+  }, [map, selectedPoint]);
 
   return <div className={className} ref={mapRef}></div>;
 }

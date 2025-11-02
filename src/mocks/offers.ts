@@ -198,7 +198,7 @@ export const offers: Offer[] = [
     host: { avatarUrl: 'img/avatar-angelina.jpg', name: 'Angelina', isPro: true },
     description: 'A quiet cozy and picturesque that hides behind a a river by the unique lightness of Amsterdam. The building is green and from 18th century.\n\nAn independent House, strategically located between Rembrand Square and National Opera, but where the bustle of the city comes to rest in this alley flowery and colorful.',
     location: { latitude: 52.3909553943508, longitude: 4.85309666406198, zoom: 16 },
-    city: { name: 'Amsterdam', location: { latitude: 52.37454, longitude: 4.897976, zoom: 13 } }
+    city: { name: 'Amsterdam', location: { latitude: 52.37454, longitude: 4.897976, zoom: 12 } }
   },
   {
     id: 12,
@@ -215,7 +215,7 @@ export const offers: Offer[] = [
     host: { avatarUrl: 'img/avatar-max.jpg', name: 'Max', isPro: false },
     description: 'This is a unique and stylish room in the heart of the city, perfect for a solo traveler or a couple.',
     location: { latitude: 52.3609553943508, longitude: 4.85309666406198, zoom: 16 },
-    city: { name: 'Amsterdam', location: { latitude: 52.37454, longitude: 4.897976, zoom: 13 } }
+    city: { name: 'Amsterdam', location: { latitude: 52.37454, longitude: 4.897976, zoom: 12 } }
   },
   {
     id: 13,
@@ -232,7 +232,7 @@ export const offers: Offer[] = [
     host: { avatarUrl: 'img/avatar-angelina.jpg', name: 'Angelina', isPro: true },
     description: 'Enjoy stunning views of the famous Prinsengracht canal from this modern and spacious apartment.',
     location: { latitude: 52.3909553943508, longitude: 4.929309666406198, zoom: 16 },
-    city: { name: 'Amsterdam', location: { latitude: 52.37454, longitude: 4.897976, zoom: 13 } }
+    city: { name: 'Amsterdam', location: { latitude: 52.37454, longitude: 4.897976, zoom: 12 } }
   },
   {
     id: 14,
@@ -249,7 +249,7 @@ export const offers: Offer[] = [
     host: { avatarUrl: 'img/avatar-angelina.jpg', name: 'Angelina', isPro: true },
     description: 'A luxurious stay awaits you in this premium apartment with all the amenities you could wish for.',
     location: { latitude: 52.3809553943508, longitude: 4.939309666406198, zoom: 16 },
-    city: { name: 'Amsterdam', location: { latitude: 52.37454, longitude: 4.897976, zoom: 13 } }
+    city: { name: 'Amsterdam', location: { latitude: 52.37454, longitude: 4.897976, zoom: 12 } }
   },
 
   // Hamburg
