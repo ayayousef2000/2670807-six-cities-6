@@ -14,11 +14,11 @@ type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
 const sortOffers = (offers: Offer[], sortType: SortOption): Offer[] => {
   switch (sortType) {
     case SortOptionsEnum.PRICE_LOW_TO_HIGH:
-      return [...offers].sort((a, b) => a.price - b.price);
+      return offers.toSorted((a, b) => a.price - b.price);
     case SortOptionsEnum.PRICE_HIGH_TO_LOW:
-      return [...offers].sort((a, b) => b.price - a.price);
+      return offers.toSorted((a, b) => b.price - a.price);
     case SortOptionsEnum.TOP_RATED_FIRST:
-      return [...offers].sort((a, b) => b.rating - a.rating);
+      return offers.toSorted((a, b) => b.rating - a.rating);
     default:
       return offers;
   }

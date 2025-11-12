@@ -7,7 +7,7 @@ import ReviewsList from '../../components/reviews-list';
 import { reviews } from '../../mocks/reviews';
 import NotFoundPage from '../not-found-page';
 import { RootState } from '../../store';
-
+import { getNearPlaces, getRatingWidth } from '../../utils';
 
 function OfferPage(): JSX.Element {
   const allOffers = useSelector((state: RootState) => state.offers.offers);
@@ -35,8 +35,8 @@ function OfferPage(): JSX.Element {
     description,
   } = currentOffer;
 
-  const ratingWidth = `${(rating / 5) * 100}%`;
-  const nearPlaces = allOffers.filter((offer) => offer.id !== offerId).slice(0, 3);
+  const ratingWidth = getRatingWidth(rating);
+  const nearPlaces = getNearPlaces(allOffers, offerId);
   const mapPoints = [...nearPlaces, currentOffer];
 
   return (
