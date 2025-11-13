@@ -10,6 +10,7 @@ export type City = {
 export type Offer = {
   id: number;
   images: string[];
+  previewImage: string;
   isPremium: boolean;
   title: string;
   isFavorite: boolean;

@@ -1,11 +1,13 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import OfferList from '../../components/offer-list';
 import Map from '../../components/map';
 import CitiesList from '../../components/cities-list';
 import SortOptions from '../../components/sort-options';
+import Spinner from '../../components/spinner';
 import { RootState, AppDispatch } from '../../store';
 import { setCity } from '../../store/offers-slice';
+import { fetchOffersAction } from '../../store/api-actions';
 import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
 import { Offer } from '../../types/offer';
 
@@ -26,8 +28,16 @@ const sortOffers = (offers: Offer[], sortType: SortOption): Offer[] => {
 
 function MainPage(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
+
+  const isOffersDataLoading = useSelector((state: RootState) => state.offers.isOffersDataLoading);
+  const hasError = useSelector((state: RootState) => state.offers.hasError);
+
   const currentCity = useSelector((state: RootState) => state.offers.city);
   const allOffers = useSelector((state: RootState) => state.offers.offers);
+
+  useEffect(() => {
+    dispatch(fetchOffersAction());
+  }, [dispatch]);
 
   const [currentSort, setCurrentSort] = useState<SortOption>(SortOptionsEnum.POPULAR);
   const [activeOfferId, setActiveOfferId] = useState<number | null>(null);
@@ -61,6 +71,28 @@ function MainPage(): JSX.Element {
   const offersCount = cityOffers.length;
   const selectedPoint = cityOffers.find((offer) => offer.id === activeOfferId);
   const cityLocation = cityOffers.length > 0 ? cityOffers[0].city : undefined;
+
+  if (isOffersDataLoading) {
+    return <Spinner />;
+  }
+
+  if (hasError) {
+    return (
+      <div className="page page--gray page--main">
+        <div className="cities">
+          <div className="cities__places-container cities__places-container--empty container">
+            <section className="cities__no-places">
+              <div className="cities__status-wrapper tabs__content">
+                <b className="cities__status">Failed to load offers</b>
+                <p className="cities__status-description">The server is currently unavailable. Please try again later.</p>
+              </div>
+            </section>
+            <div className="cities__right-section"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page page--gray page--main">

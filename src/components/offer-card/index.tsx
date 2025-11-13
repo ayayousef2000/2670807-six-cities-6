@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Offer } from '../../types/offer';
+import { getRatingWidth } from '../../utils';
 
 type CardVariant = 'cities' | 'near-places';
 
@@ -14,7 +15,7 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
   const {
     id,
     isPremium,
-    images,
+    previewImage,
     price,
     isFavorite,
     rating,
@@ -22,8 +23,8 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
     type,
   } = offer;
 
-  const previewImage = images[0];
-  const ratingWidth = `${(rating / 5) * 100}%`;
+
+  const ratingWidth = getRatingWidth(rating);
 
   const handleMouseEnter = () => {
     onMouseEnter?.(id);
@@ -46,7 +47,7 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
       )}
       <div className={`${variant}__image-wrapper place-card__image-wrapper`}>
         <Link to={`/offer/${id}`}>
-          <img className="place-card__image" src={`../${previewImage}`} width="260" height="200" alt={title} />
+          <img className="place-card__image" src={previewImage} width="260" height="200" alt={title} />
         </Link>
       </div>
       <div className="place-card__info">
