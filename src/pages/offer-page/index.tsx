@@ -1,26 +1,15 @@
-import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import CommentForm from '../../components/comment-form';
 import Map from '../../components/map';
 import OfferList from '../../components/offer-list';
 import ReviewsList from '../../components/reviews-list';
 import NotFoundPage from '../not-found-page';
 import Spinner from '../../components/spinner';
-import { RootState, AppDispatch } from '../../store';
-import { fetchOfferDataAction } from '../../store/api-actions';
+import { RootState } from '../../store';
+
 import { getRatingWidth } from '../../utils';
 
 function OfferPage(): JSX.Element {
-  const { id } = useParams<{ id: string }>();
-  const dispatch = useDispatch<AppDispatch>();
-
-  useEffect(() => {
-    if (id) {
-      dispatch(fetchOfferDataAction(id));
-    }
-  }, [id, dispatch]);
-
   const {
     offer,
     reviews,
