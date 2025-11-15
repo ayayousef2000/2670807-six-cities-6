@@ -52,7 +52,7 @@ function Map({ city, points, selectedPoint, className }: MapProps): JSX.Element 
   }, [map, points]);
 
   useEffect(() => {
-    if (map) {
+    if (map && Object.keys(markersRef.current).length > 0) {
       Object.values(markersRef.current).forEach((marker) => {
         marker.setIcon(defaultCustomIcon);
       });
