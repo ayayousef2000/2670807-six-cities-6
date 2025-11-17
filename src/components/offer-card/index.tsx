@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Offer } from '../../types/offer';
 import { getRatingWidth } from '../../utils';
 
-type CardVariant = 'cities' | 'near-places';
+type CardVariant = 'cities' | 'near-places' | 'favorites';
 
 type OfferCardProps = {
   offer: Offer;

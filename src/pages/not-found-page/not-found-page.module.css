@@ -1,0 +1,28 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: #ffffff;
+  padding: 2rem;
+}
+
+.title {
+  margin-bottom: 1rem;
+}
+
+.image {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+.text {
+  margin-top: 1rem;
+}
+
+.link {
+  color: #4481c3;
+  text-decoration: underline;
+}

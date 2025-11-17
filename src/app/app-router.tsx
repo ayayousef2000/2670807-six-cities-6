@@ -28,15 +28,14 @@ export function AppRouter(): JSX.Element {
           path={AppRoute.Offer}
           element={<OfferPage />}
         />
+        <Route
+          path="*"
+          element={<NotFoundPage />}
+        />
       </Route>
-
       <Route
         path={AppRoute.Login}
         element={<LoginPage />}
-      />
-      <Route
-        path="*"
-        element={<NotFoundPage />}
       />
     </Routes>
   );
