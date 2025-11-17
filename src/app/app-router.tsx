@@ -19,7 +19,7 @@ export function AppRouter(): JSX.Element {
         <Route
           path={AppRoute.Favorites}
           element={
-            <PrivateRoute isAuthorized={false}>
+            <PrivateRoute>
               <FavouritesPage />
             </PrivateRoute>
           }
