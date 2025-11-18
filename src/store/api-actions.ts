@@ -6,6 +6,7 @@ import { Review } from '../types/review';
 import { UserData } from '../types/user-data';
 import { AuthData } from '../types/auth-data';
 import { saveToken, dropToken } from '../services/token';
+import { APIRoute } from '../const';
 
 interface ValidationError {
   errorType: string;
@@ -24,10 +25,19 @@ export const fetchOffersAction = createAsyncThunk<
     dispatch: AppDispatch;
     state: RootState;
     extra: AxiosInstance;
+    rejectValue: string;
   }
->('data/fetchOffers', async (_arg, { extra: api }) => {
-  const { data } = await api.get<Offer[]>('/offers');
-  return data;
+>('data/fetchOffers', async (_arg, { extra: api, rejectWithValue }) => {
+  try {
+    const { data } = await api.get<Offer[]>(APIRoute.Offers);
+    return data;
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message: string }>;
+    if (axiosError.response && axiosError.response.data) {
+      return rejectWithValue(axiosError.response.data.message);
+    }
+    return rejectWithValue(axiosError.message || 'Failed to fetch offers');
+  }
 });
 
 export const checkAuthAction = createAsyncThunk<
@@ -40,7 +50,7 @@ export const checkAuthAction = createAsyncThunk<
   }
 >('user/checkAuth', async (_arg, { extra: api, rejectWithValue }) => {
   try {
-    const { data } = await api.get<UserData>('/login');
+    const { data } = await api.get<UserData>(APIRoute.Login);
     return data;
   } catch (error) {
     dropToken();
@@ -59,7 +69,7 @@ export const loginAction = createAsyncThunk<
   }
 >('user/login', async ({ login: email, password }, { extra: api, rejectWithValue }) => {
   try {
-    const { data } = await api.post<UserData>('/login', { email, password });
+    const { data } = await api.post<UserData>(APIRoute.Login, { email, password });
     saveToken(data.token);
     return data;
   } catch (error) {
@@ -95,7 +105,7 @@ export const logoutAction = createAsyncThunk<
   }
 >('user/logout', async (_arg, { extra: api }) => {
   try {
-    await api.delete('/logout');
+    await api.delete(APIRoute.Logout);
   } finally {
     dropToken();
   }
@@ -115,9 +125,9 @@ export const fetchOfferDataAction = createAsyncThunk<
   }
 >('data/fetchOfferData', async (offerId, { extra: api }) => {
   const [offer, reviews, nearbyOffers] = await Promise.all([
-    api.get<Offer>(`/offers/${offerId}`),
-    api.get<Review[]>(`/comments/${offerId}`),
-    api.get<Offer[]>(`/offers/${offerId}/nearby`),
+    api.get<Offer>(`${APIRoute.Offers}/${offerId}`),
+    api.get<Review[]>(`${APIRoute.Comments}/${offerId}`),
+    api.get<Offer[]>(`${APIRoute.Offers}/${offerId}/nearby`),
   ]);
 
   return {

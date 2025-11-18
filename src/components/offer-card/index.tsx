@@ -7,7 +7,7 @@ type CardVariant = 'cities' | 'near-places' | 'favorites';
 type OfferCardProps = {
   offer: Offer;
   variant?: CardVariant;
-  onMouseEnter?: (offerId: number) => void;
+  onMouseEnter?: (offerId: string) => void;
   onMouseLeave?: () => void;
 };
 
@@ -22,7 +22,6 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
     title,
     type,
   } = offer;
-
 
   const ratingWidth = getRatingWidth(rating);
 

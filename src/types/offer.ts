@@ -8,7 +8,7 @@ export type City = {
 };
 
 export type Offer = {
-  id: number;
+  id: string;
   images: string[];
   previewImage: string;
   isPremium: boolean;

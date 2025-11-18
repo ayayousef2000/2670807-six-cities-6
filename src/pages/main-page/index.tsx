@@ -9,6 +9,7 @@ import { setCity } from '../../store/offers-slice';
 import { fetchOffersAction } from '../../store/api-actions';
 import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
 import { Offer } from '../../types/offer';
+import './main-page.css';
 
 type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
 
@@ -27,17 +28,18 @@ const sortOffers = (offers: Offer[], sortType: SortOption): Offer[] => {
 
 function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
+
   const currentCity = useAppSelector((state) => state.offers.city);
   const allOffers = useAppSelector((state) => state.offers.offers);
   const isOffersDataLoading = useAppSelector((state) => state.offers.isOffersDataLoading);
-  const hasError = useAppSelector((state) => state.offers.hasError);
+  const error = useAppSelector((state) => state.offers.error);
+
+  const [currentSort, setCurrentSort] = useState<SortOption>(SortOptionsEnum.POPULAR);
+  const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchOffersAction());
   }, [dispatch]);
-
-  const [currentSort, setCurrentSort] = useState<SortOption>(SortOptionsEnum.POPULAR);
-  const [activeOfferId, setActiveOfferId] = useState<number | null>(null);
 
   const cityOffers = useMemo(
     () => allOffers.filter((offer) => offer.city.name === currentCity),
@@ -49,6 +51,19 @@ function MainPage(): JSX.Element {
     [cityOffers, currentSort]
   );
 
+  const errorMessage = useMemo(() => {
+    if (!error) {
+      return '';
+    }
+    if (error.includes('404')) {
+      return 'The offers data could not be found. The server might be down or configured incorrectly.';
+    }
+    if (error.includes('timeout') || error.includes('Network') || error.includes('500')) {
+      return 'The server is not responding. Please check your internet connection.';
+    }
+    return 'An unexpected error occurred. Please try again later.';
+  }, [error]);
+
   const handleCityChange = useCallback((city: string) => {
     dispatch(setCity(city));
   }, [dispatch]);
@@ -57,7 +72,7 @@ function MainPage(): JSX.Element {
     setCurrentSort(sortType);
   }, []);
 
-  const handleCardMouseEnter = useCallback((offerId: number) => {
+  const handleCardMouseEnter = useCallback((offerId: string) => {
     setActiveOfferId(offerId);
   }, []);
 
@@ -66,43 +81,55 @@ function MainPage(): JSX.Element {
   }, []);
 
   const offersCount = cityOffers.length;
-  const cityLocation = cityOffers.length > 0 ? cityOffers[0].city : undefined;
+  const hasOffers = offersCount > 0;
+  const isMainEmpty = !hasOffers || !!error;
 
   if (isOffersDataLoading) {
     return <Spinner />;
   }
 
-  if (hasError) {
-    return (
-      <div className="page page--gray page--main">
-        <div className="cities">
-          <div className="cities__places-container cities__places-container--empty container">
-            <section className="cities__no-places">
-              <div className="cities__status-wrapper tabs__content">
-                <b className="cities__status">Failed to load offers</b>
-                <p className="cities__status-description">The server is currently unavailable. Please try again later.</p>
-              </div>
-            </section>
-            <div className="cities__right-section"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="page page--gray page--main">
-      <main className="page__main page__main--index">
-        <h1 className="visually-hidden">Cities</h1>
+    <main className={`page__main page__main--index ${isMainEmpty ? 'page__main--index-empty' : ''}`}>
+      <h1 className="visually-hidden">Cities</h1>
 
+      <div className="tabs">
         <CitiesList
           cities={CITIES}
           currentCity={currentCity}
           onCityChange={handleCityChange}
         />
+      </div>
 
-        <div className="cities">
-          <div className="cities__places-container container">
+      <div className="cities">
+        <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
+
+          {isMainEmpty && (
+            <section className="cities__no-places">
+              <div className="cities__status-wrapper tabs__content">
+                {error ? (
+                  <>
+                    <b className="cities__status">Could not load offers</b>
+                    <p className="cities__status-description">{errorMessage}</p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="form__submit button cities__status-button"
+                    >
+                      Try Again
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <b className="cities__status">No places to stay available</b>
+                    <p className="cities__status-description">
+                      We could not find any property available at the moment in {currentCity}
+                    </p>
+                  </>
+                )}
+              </div>
+            </section>
+          )}
+
+          {!isMainEmpty && (
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
               <b className="places__found">{offersCount} places to stay in {currentCity}</b>
@@ -118,20 +145,22 @@ function MainPage(): JSX.Element {
                 onCardMouseLeave={handleCardMouseLeave}
               />
             </section>
-            <div className="cities__right-section">
-              {cityLocation && (
-                <Map
-                  city={cityLocation}
-                  points={cityOffers}
-                  selectedPoint={cityOffers.find((offer) => offer.id === activeOfferId)}
-                  className="cities__map"
-                />
-              )}
-            </div>
+          )}
+
+          <div className="cities__right-section">
+            {!isMainEmpty && (
+              <Map
+                city={cityOffers[0].city}
+                points={cityOffers}
+                selectedPoint={cityOffers.find((offer) => offer.id === activeOfferId)}
+                className="cities__map"
+              />
+            )}
           </div>
+
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
 

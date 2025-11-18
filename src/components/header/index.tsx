@@ -8,15 +8,15 @@ import UserAuth from './user-auth';
 import UserGuest from './user-guest';
 
 type HeaderProps = {
-  favoriteCount: number;
-}
+  favoriteCount?: number;
+};
 
 function Header({ favoriteCount }: HeaderProps): JSX.Element {
   const dispatch = useAppDispatch();
   const authorizationStatus = useAppSelector((state) => state.user.authorizationStatus);
   const user = useAppSelector((state) => state.user.user);
   const requestStatus = useAppSelector((state) => state.user.requestStatus);
-
+  const displayCount = favoriteCount ?? 0;
   const isLoggingOut = requestStatus === RequestStatus.Pending;
 
   const handleSignOut = () => {
@@ -37,7 +37,7 @@ function Header({ favoriteCount }: HeaderProps): JSX.Element {
               {authorizationStatus === AuthorizationStatus.Auth ? (
                 <UserAuth
                   user={user}
-                  favoriteCount={favoriteCount}
+                  favoriteCount={displayCount}
                   onSignOut={handleSignOut}
                   isLoggingOut={isLoggingOut}
                 />
