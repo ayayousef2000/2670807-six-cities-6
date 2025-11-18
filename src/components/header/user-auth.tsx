@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { MouseEvent } from 'react';
 import { AppRoute } from '../../app/routes';
 import { UserData } from '../../types/user-data';
 
@@ -6,9 +7,17 @@ type UserAuthProps = {
   user: UserData | null;
   favoriteCount: number;
   onSignOut: () => void;
+  isLoggingOut: boolean;
 };
 
-function UserAuth({ user, favoriteCount, onSignOut }: UserAuthProps): JSX.Element {
+function UserAuth({ user, favoriteCount, onSignOut, isLoggingOut }: UserAuthProps): JSX.Element {
+  const handleClick = (evt: MouseEvent<HTMLAnchorElement>) => {
+    evt.preventDefault();
+    if (!isLoggingOut) {
+      onSignOut();
+    }
+  };
+
   return (
     <>
       <li className="header__nav-item user">
@@ -23,9 +32,15 @@ function UserAuth({ user, favoriteCount, onSignOut }: UserAuthProps): JSX.Elemen
         <Link
           className="header__nav-link"
           to={AppRoute.Main}
-          onClick={onSignOut}
+          onClick={handleClick}
+          style={{
+            pointerEvents: isLoggingOut ? 'none' : 'auto',
+            opacity: isLoggingOut ? 0.5 : 1
+          }}
         >
-          <span className="header__signout">Sign out</span>
+          <span className="header__signout">
+            {isLoggingOut ? 'Signing out...' : 'Sign out'}
+          </span>
         </Link>
       </li>
     </>

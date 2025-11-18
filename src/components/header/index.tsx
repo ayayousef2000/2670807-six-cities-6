@@ -3,6 +3,7 @@ import { AppRoute } from '../../app/routes';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { AuthorizationStatus } from '../../const';
 import { logoutAction } from '../../store/api-actions';
+import { RequestStatus } from '../../store/user-slice';
 import UserAuth from './user-auth';
 import UserGuest from './user-guest';
 
@@ -14,6 +15,9 @@ function Header({ favoriteCount }: HeaderProps): JSX.Element {
   const dispatch = useAppDispatch();
   const authorizationStatus = useAppSelector((state) => state.user.authorizationStatus);
   const user = useAppSelector((state) => state.user.user);
+  const requestStatus = useAppSelector((state) => state.user.requestStatus);
+
+  const isLoggingOut = requestStatus === RequestStatus.Pending;
 
   const handleSignOut = () => {
     dispatch(logoutAction());
@@ -35,6 +39,7 @@ function Header({ favoriteCount }: HeaderProps): JSX.Element {
                   user={user}
                   favoriteCount={favoriteCount}
                   onSignOut={handleSignOut}
+                  isLoggingOut={isLoggingOut}
                 />
               ) : (
                 <UserGuest />

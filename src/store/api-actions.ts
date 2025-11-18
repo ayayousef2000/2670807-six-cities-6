@@ -38,9 +38,14 @@ export const checkAuthAction = createAsyncThunk<
     state: RootState;
     extra: AxiosInstance;
   }
->('user/checkAuth', async (_arg, { extra: api }) => {
-  const { data } = await api.get<UserData>('/login');
-  return data;
+>('user/checkAuth', async (_arg, { extra: api, rejectWithValue }) => {
+  try {
+    const { data } = await api.get<UserData>('/login');
+    return data;
+  } catch (error) {
+    dropToken();
+    return rejectWithValue(null);
+  }
 });
 
 export const loginAction = createAsyncThunk<
@@ -89,8 +94,11 @@ export const logoutAction = createAsyncThunk<
     extra: AxiosInstance;
   }
 >('user/logout', async (_arg, { extra: api }) => {
-  await api.delete('/logout');
-  dropToken();
+  try {
+    await api.delete('/logout');
+  } finally {
+    dropToken();
+  }
 });
 
 export const fetchOfferDataAction = createAsyncThunk<

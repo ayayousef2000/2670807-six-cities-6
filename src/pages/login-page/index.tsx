@@ -3,45 +3,50 @@ import { FormEvent, useState, ChangeEvent } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { loginAction } from '../../store/api-actions';
 import { AuthorizationStatus, CITIES } from '../../const';
-import { clearLoginError, setLoginError } from '../../store/user-slice';
+import { RequestStatus } from '../../store/user-slice';
 import { setCity } from '../../store/offers-slice';
-import './login-page.css';
 import { AppRoute } from '../../app/routes';
+import './login-page.css';
 
 function LoginPage(): JSX.Element {
   const dispatch = useAppDispatch();
   const authorizationStatus = useAppSelector((state) => state.user.authorizationStatus);
-  const loginError = useAppSelector((state) => state.user.error);
+  const loginStatus = useAppSelector((state) => state.user.requestStatus);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [randomCity] = useState(() => CITIES[Math.floor(Math.random() * CITIES.length)]);
-
-  const handleCityLinkClick = () => {
-    dispatch(setCity(randomCity));
-  };
 
   if (authorizationStatus === AuthorizationStatus.Auth) {
     return <Navigate to={AppRoute.Main} />;
   }
 
-  const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
-    evt.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      dispatch(setLoginError('Email and Password are required.'));
-      return;
-    }
-    dispatch(loginAction({
-      login: email,
-      password: password,
-    }));
+  const handleCityLinkClick = () => {
+    dispatch(setCity(randomCity));
   };
 
+  const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
+    evt.preventDefault();
+    setErrorMessage(null);
+
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage('Email and Password are required.');
+      return;
+    }
+
+    dispatch(loginAction({ login: email, password: password }))
+      .unwrap()
+      .catch((error) => {
+        setErrorMessage(error as string);
+      });
+  };
   const handleInputChange = (setter: (value: string) => void) => (evt: ChangeEvent<HTMLInputElement>) => {
     setter(evt.target.value);
-    if (loginError) {
-      dispatch(clearLoginError());
+    if (errorMessage) {
+      setErrorMessage(null);
     }
   };
+  const isSubmitting = loginStatus === RequestStatus.Pending;
 
   return (
     <div className="page page--gray page--login">
@@ -56,6 +61,7 @@ function LoginPage(): JSX.Element {
           </div>
         </div>
       </header>
+
       <main className="page__main page__main--login">
         <div className="page__login-container container">
           <section className="login">
@@ -77,6 +83,8 @@ function LoginPage(): JSX.Element {
                   required
                   value={email}
                   onChange={handleInputChange(setEmail)}
+                  disabled={isSubmitting}
+                  data-testid="email-input"
                 />
               </div>
               <div className="login__input-wrapper form__input-wrapper">
@@ -89,15 +97,15 @@ function LoginPage(): JSX.Element {
                   required
                   value={password}
                   onChange={handleInputChange(setPassword)}
+                  disabled={isSubmitting}
+                  data-testid="password-input"
                 />
               </div>
 
-              {loginError && (
+              {errorMessage && (
                 <div className="login__error-message">
-                  {loginError.split('\n').map((msg) => (
-                    <span key={msg} style={{ display: 'block', marginBottom: '4px' }}>
-                      {msg}
-                    </span>
+                  {errorMessage.split('\n').map((msg) => (
+                    <span key={msg}>{msg}</span>
                   ))}
                 </div>
               )}
@@ -105,8 +113,9 @@ function LoginPage(): JSX.Element {
               <button
                 className="login__submit form__submit button"
                 type="submit"
+                disabled={isSubmitting}
               >
-                Sign in
+                {isSubmitting ? 'Signing in...' : 'Sign in'}
               </button>
             </form>
           </section>

@@ -1,31 +1,31 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 import { AuthorizationStatus } from '../const';
 import { UserData } from '../types/user-data';
 import { checkAuthAction, loginAction, logoutAction } from './api-actions';
 
+export enum RequestStatus {
+  Idle = 'IDLE',
+  Pending = 'PENDING',
+  Success = 'SUCCESS',
+  Failed = 'FAILED',
+}
+
 interface UserState {
   authorizationStatus: AuthorizationStatus;
   user: UserData | null;
-  error: string | null;
+  requestStatus: RequestStatus;
 }
 
 const initialState: UserState = {
   authorizationStatus: AuthorizationStatus.Unknown,
   user: null,
-  error: null,
+  requestStatus: RequestStatus.Idle,
 };
 
 export const userSlice = createSlice({
   name: 'user',
   initialState,
-  reducers: {
-    setLoginError: (state, action: PayloadAction<string>) => {
-      state.error = action.payload;
-    },
-    clearLoginError: (state) => {
-      state.error = null;
-    },
-  },
+  reducers: {},
   extraReducers(builder) {
     builder
       .addCase(checkAuthAction.fulfilled, (state, action) => {
@@ -36,22 +36,29 @@ export const userSlice = createSlice({
         state.authorizationStatus = AuthorizationStatus.NoAuth;
       })
       .addCase(loginAction.pending, (state) => {
-        state.error = null;
+        state.requestStatus = RequestStatus.Pending;
       })
       .addCase(loginAction.fulfilled, (state, action) => {
+        state.requestStatus = RequestStatus.Success;
         state.authorizationStatus = AuthorizationStatus.Auth;
         state.user = action.payload;
-        state.error = null;
       })
-      .addCase(loginAction.rejected, (state, action) => {
+      .addCase(loginAction.rejected, (state) => {
+        state.requestStatus = RequestStatus.Failed;
         state.authorizationStatus = AuthorizationStatus.NoAuth;
-        state.error = (action.payload as string) || 'Unknown login error';
+      })
+      .addCase(logoutAction.pending, (state) => {
+        state.requestStatus = RequestStatus.Pending;
       })
       .addCase(logoutAction.fulfilled, (state) => {
+        state.requestStatus = RequestStatus.Success;
+        state.authorizationStatus = AuthorizationStatus.NoAuth;
+        state.user = null;
+      })
+      .addCase(logoutAction.rejected, (state) => {
+        state.requestStatus = RequestStatus.Failed;
         state.authorizationStatus = AuthorizationStatus.NoAuth;
         state.user = null;
       });
   },
 });
-
-export const { clearLoginError, setLoginError } = userSlice.actions;
