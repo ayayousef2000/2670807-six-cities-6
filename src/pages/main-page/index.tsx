@@ -1,11 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import OfferList from '../../components/offer-list';
 import Map from '../../components/map';
 import CitiesList from '../../components/cities-list';
 import SortOptions from '../../components/sort-options';
 import Spinner from '../../components/spinner';
-import { RootState, AppDispatch } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { setCity } from '../../store/offers-slice';
 import { fetchOffersAction } from '../../store/api-actions';
 import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
@@ -27,13 +26,11 @@ const sortOffers = (offers: Offer[], sortType: SortOption): Offer[] => {
 };
 
 function MainPage(): JSX.Element {
-  const dispatch = useDispatch<AppDispatch>();
-
-  const isOffersDataLoading = useSelector((state: RootState) => state.offers.isOffersDataLoading);
-  const hasError = useSelector((state: RootState) => state.offers.hasError);
-
-  const currentCity = useSelector((state: RootState) => state.offers.city);
-  const allOffers = useSelector((state: RootState) => state.offers.offers);
+  const dispatch = useAppDispatch();
+  const currentCity = useAppSelector((state) => state.offers.city);
+  const allOffers = useAppSelector((state) => state.offers.offers);
+  const isOffersDataLoading = useAppSelector((state) => state.offers.isOffersDataLoading);
+  const hasError = useAppSelector((state) => state.offers.hasError);
 
   useEffect(() => {
     dispatch(fetchOffersAction());
@@ -69,7 +66,6 @@ function MainPage(): JSX.Element {
   }, []);
 
   const offersCount = cityOffers.length;
-  const selectedPoint = cityOffers.find((offer) => offer.id === activeOfferId);
   const cityLocation = cityOffers.length > 0 ? cityOffers[0].city : undefined;
 
   if (isOffersDataLoading) {
@@ -127,7 +123,7 @@ function MainPage(): JSX.Element {
                 <Map
                   city={cityLocation}
                   points={cityOffers}
-                  selectedPoint={selectedPoint}
+                  selectedPoint={cityOffers.find((offer) => offer.id === activeOfferId)}
                   className="cities__map"
                 />
               )}

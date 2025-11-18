@@ -1,11 +1,21 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { AxiosError, AxiosInstance } from 'axios';
 import { AppDispatch, RootState } from './';
 import { Offer } from '../types/offer';
 import { Review } from '../types/review';
-import { AxiosError, AxiosInstance } from 'axios';
 import { UserData } from '../types/user-data';
 import { AuthData } from '../types/auth-data';
 import { saveToken, dropToken } from '../services/token';
+
+interface ValidationError {
+  errorType: string;
+  message: string;
+  details: {
+    property: string;
+    value: string;
+    messages: string[];
+  }[];
+}
 
 export const fetchOffersAction = createAsyncThunk<
   Offer[],
@@ -33,7 +43,6 @@ export const checkAuthAction = createAsyncThunk<
   return data;
 });
 
-
 export const loginAction = createAsyncThunk<
   UserData,
   AuthData,
@@ -49,13 +58,25 @@ export const loginAction = createAsyncThunk<
     saveToken(data.token);
     return data;
   } catch (error) {
-    const axiosError = error as AxiosError<{ error: string }>;
+    const axiosError = error as AxiosError<ValidationError>;
 
-    if (axiosError.response && axiosError.response.data && axiosError.response.data.error) {
-      return rejectWithValue(axiosError.response.data.error);
-    } else {
-      return rejectWithValue('Invalid email or password.');
+    if (axiosError.response && axiosError.response.data) {
+      const responseData = axiosError.response.data;
+
+      if (responseData.details && responseData.details.length > 0) {
+        const allErrors = responseData.details
+          .map((detail) => detail.messages)
+          .flat();
+
+        return rejectWithValue(allErrors.join('\n'));
+      }
+
+      if (responseData.message) {
+        return rejectWithValue(responseData.message);
+      }
     }
+
+    return rejectWithValue('Unable to sign in. Please try again later.');
   }
 });
 

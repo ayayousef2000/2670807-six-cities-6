@@ -1,9 +1,10 @@
 import { Link, Navigate } from 'react-router-dom';
-import { FormEvent, useState, useMemo, useEffect, ChangeEvent } from 'react';
+import { FormEvent, useState, ChangeEvent } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { loginAction } from '../../store/api-actions';
 import { AuthorizationStatus, CITIES } from '../../const';
-import { clearLoginError } from '../../store/user-slice';
+import { clearLoginError, setLoginError } from '../../store/user-slice';
+import { setCity } from '../../store/offers-slice';
 import './login-page.css';
 import { AppRoute } from '../../app/routes';
 
@@ -13,13 +14,11 @@ function LoginPage(): JSX.Element {
   const loginError = useAppSelector((state) => state.user.error);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [clientError, setClientError] = useState<string | null>(null);
+  const [randomCity] = useState(() => CITIES[Math.floor(Math.random() * CITIES.length)]);
 
-  const randomCity = useMemo(() => CITIES[Math.floor(Math.random() * CITIES.length)], []);
-
-  useEffect(() => () => {
-    dispatch(clearLoginError());
-  }, [dispatch]);
+  const handleCityLinkClick = () => {
+    dispatch(setCity(randomCity));
+  };
 
   if (authorizationStatus === AuthorizationStatus.Auth) {
     return <Navigate to={AppRoute.Main} />;
@@ -27,10 +26,8 @@ function LoginPage(): JSX.Element {
 
   const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
-    const hasLetter = /[a-zA-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    if (!hasLetter || !hasNumber) {
-      setClientError('Password must contain at least one letter and one number.');
+    if (!email.trim() || !password.trim()) {
+      dispatch(setLoginError('Email and Password are required.'));
       return;
     }
     dispatch(loginAction({
@@ -41,9 +38,6 @@ function LoginPage(): JSX.Element {
 
   const handleInputChange = (setter: (value: string) => void) => (evt: ChangeEvent<HTMLInputElement>) => {
     setter(evt.target.value);
-    if (clientError) {
-      setClientError(null);
-    }
     if (loginError) {
       dispatch(clearLoginError());
     }
@@ -71,6 +65,7 @@ function LoginPage(): JSX.Element {
               action="#"
               method="post"
               onSubmit={handleSubmit}
+              noValidate
             >
               <div className="login__input-wrapper form__input-wrapper">
                 <label className="visually-hidden">E-mail</label>
@@ -97,10 +92,14 @@ function LoginPage(): JSX.Element {
                 />
               </div>
 
-              {(clientError || loginError) && (
-                <p className="login__error-message"> {/* Use the new CSS class */}
-                  {clientError || loginError}
-                </p>
+              {loginError && (
+                <div className="login__error-message">
+                  {loginError.split('\n').map((msg) => (
+                    <span key={msg} style={{ display: 'block', marginBottom: '4px' }}>
+                      {msg}
+                    </span>
+                  ))}
+                </div>
               )}
 
               <button
@@ -113,7 +112,11 @@ function LoginPage(): JSX.Element {
           </section>
           <section className="locations locations--login locations--current">
             <div className="locations__item">
-              <Link className="locations__item-link" to={AppRoute.Main}>
+              <Link
+                className="locations__item-link"
+                to={AppRoute.Main}
+                onClick={handleCityLinkClick}
+              >
                 <span>{randomCity}</span>
               </Link>
             </div>
