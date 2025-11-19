@@ -6,3 +6,12 @@
   display: block;
   position: relative;
 }
+
+.offer__no-data {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  text-align: center;
+}

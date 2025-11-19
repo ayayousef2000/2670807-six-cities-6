@@ -58,6 +58,10 @@ export const fetchOfferAction = createAsyncThunk<
   } catch (error) {
     const axiosError = error as AxiosError<CommonError>;
 
+    if (axiosError.response?.status === 404) {
+      return rejectWithValue('NOT_FOUND');
+    }
+
     if (axiosError.response && axiosError.response.data) {
       return rejectWithValue(axiosError.response.data.message);
     }
@@ -102,7 +106,6 @@ export const fetchNearbyAction = createAsyncThunk<
     return data;
   } catch (error) {
     const axiosError = error as AxiosError<CommonError>;
-    // Handle 404 for nearby offers as per your screenshot
     if (axiosError.response && axiosError.response.data) {
       return rejectWithValue(axiosError.response.data.message);
     }

@@ -3,21 +3,25 @@ import { Offer } from '../types/offer';
 import { Review } from '../types/review';
 import { fetchOfferAction, fetchReviewsAction, fetchNearbyAction, postCommentAction } from './api-actions';
 
+export type RequestStatus = 'idle' | 'loading' | 'success' | 'error' | 'notFound';
+
 interface OfferState {
   offer: Offer | null;
   reviews: Review[];
   nearbyOffers: Offer[];
-  isOfferLoading: boolean;
-  hasError: boolean;
-  sendingStatus: 'idle' | 'pending' | 'success' | 'error';
+  offerStatus: RequestStatus;
+  reviewsStatus: RequestStatus;
+  nearbyStatus: RequestStatus;
+  sendingStatus: RequestStatus;
 }
 
 const initialState: OfferState = {
   offer: null,
   reviews: [],
   nearbyOffers: [],
-  isOfferLoading: false,
-  hasError: false,
+  offerStatus: 'idle',
+  reviewsStatus: 'idle',
+  nearbyStatus: 'idle',
   sendingStatus: 'idle',
 };
 
@@ -29,7 +33,9 @@ export const offerSlice = createSlice({
       state.offer = null;
       state.reviews = [];
       state.nearbyOffers = [];
-      state.hasError = false;
+      state.offerStatus = 'idle';
+      state.reviewsStatus = 'idle';
+      state.nearbyStatus = 'idle';
       state.sendingStatus = 'idle';
     },
     resetSendingStatus: (state) => {
@@ -39,31 +45,45 @@ export const offerSlice = createSlice({
   extraReducers(builder) {
     builder
       .addCase(fetchOfferAction.pending, (state) => {
-        state.isOfferLoading = true;
-        state.hasError = false;
+        state.offerStatus = 'loading';
       })
       .addCase(fetchOfferAction.fulfilled, (state, action: PayloadAction<Offer>) => {
-        state.isOfferLoading = false;
+        state.offerStatus = 'success';
         state.offer = action.payload;
       })
-      .addCase(fetchOfferAction.rejected, (state) => {
-        state.isOfferLoading = false;
-        state.hasError = true;
+      .addCase(fetchOfferAction.rejected, (state, action) => {
+        if (action.payload === 'NOT_FOUND') {
+          state.offerStatus = 'notFound';
+        } else {
+          state.offerStatus = 'error';
+        }
+      })
+      .addCase(fetchReviewsAction.pending, (state) => {
+        state.reviewsStatus = 'loading';
       })
       .addCase(fetchReviewsAction.fulfilled, (state, action: PayloadAction<Review[]>) => {
+        state.reviewsStatus = 'success';
         state.reviews = action.payload;
-        state.reviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      })
+      .addCase(fetchReviewsAction.rejected, (state) => {
+        state.reviewsStatus = 'error';
+      })
+      .addCase(fetchNearbyAction.pending, (state) => {
+        state.nearbyStatus = 'loading';
       })
       .addCase(fetchNearbyAction.fulfilled, (state, action: PayloadAction<Offer[]>) => {
+        state.nearbyStatus = 'success';
         state.nearbyOffers = action.payload;
       })
+      .addCase(fetchNearbyAction.rejected, (state) => {
+        state.nearbyStatus = 'error';
+      })
       .addCase(postCommentAction.pending, (state) => {
-        state.sendingStatus = 'pending';
+        state.sendingStatus = 'loading';
       })
       .addCase(postCommentAction.fulfilled, (state, action: PayloadAction<Review>) => {
         state.sendingStatus = 'success';
         state.reviews.push(action.payload);
-        state.reviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       })
       .addCase(postCommentAction.rejected, (state) => {
         state.sendingStatus = 'error';

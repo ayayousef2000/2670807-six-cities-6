@@ -1,9 +1,16 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../../store';
+import { AppDispatch, RootState } from '../../store';
 import { fetchOfferAction, fetchReviewsAction, fetchNearbyAction } from '../../store/api-actions';
 import { dropOffer } from '../../store/offer-slice';
+import {
+  selectOffer,
+  selectOfferStatus,
+  selectSortedReviews,
+  selectNearbyOffersToRender,
+  selectOfferPageMapPoints
+} from '../../store/offer-selectors';
 import { AuthorizationStatus } from '../../const';
 import CommentForm from '../../components/comment-form';
 import Map from '../../components/map';
@@ -18,51 +25,71 @@ function OfferPage(): JSX.Element {
   const { id } = useParams();
   const dispatch = useDispatch<AppDispatch>();
 
-  const {
-    offer,
-    reviews,
-    nearbyOffers,
-    isOfferLoading,
-    hasError,
-  } = useSelector((state: RootState) => state.offer);
+  const offer = useSelector(selectOffer);
+  const status = useSelector(selectOfferStatus);
+  const reviews = useSelector(selectSortedReviews);
+  const nearbyOffers = useSelector(selectNearbyOffersToRender);
+  const mapPoints = useSelector(selectOfferPageMapPoints);
 
   const authorizationStatus = useSelector(
     (state: RootState) => state.user.authorizationStatus
   );
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     if (id) {
-      window.scrollTo(0, 0);
       dispatch(fetchOfferAction(id));
       dispatch(fetchReviewsAction(id));
       dispatch(fetchNearbyAction(id));
     }
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    loadData();
 
     return () => {
       dispatch(dropOffer());
     };
-  }, [id, dispatch]);
+  }, [loadData, dispatch]);
 
-  const { nearbyOffersToRender, mapPoints } = useMemo(() => {
-    if (!offer) {
-      return { nearbyOffersToRender: [], mapPoints: [] };
-    }
-
-    const nearby = nearbyOffers.slice(0, 3);
-    const points = [...nearby.filter((o) => o.id !== offer.id), offer];
-
-    return {
-      nearbyOffersToRender: nearby,
-      mapPoints: points
-    };
-  }, [offer, nearbyOffers]);
-
-  if (isOfferLoading || (!offer && !hasError)) {
-    return <Spinner />;
+  if (status === 'loading' || status === 'idle') {
+    return (
+      <div className="page">
+        <main className="page__main page__main--offer">
+          <div className="container" style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Spinner />
+          </div>
+        </main>
+      </div>
+    );
   }
 
-  if (hasError || !offer) {
+  if (status === 'notFound') {
     return <NotFoundPage />;
+  }
+
+  if (status === 'error' || !offer) {
+    return (
+      <div className="page">
+        <main className="page__main page__main--offer">
+          <div className="container">
+            <section className="offer__no-data">
+              <b className="cities__status">Failed to load data</b>
+              <p className="cities__status-description">
+                  Please check your internet connection or try again later.
+              </p>
+              <button
+                className="button form__submit"
+                style={{marginTop: '20px'}}
+                onClick={loadData}
+              >
+                  Try Again
+              </button>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   const {
@@ -175,7 +202,7 @@ function OfferPage(): JSX.Element {
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            <OfferList offers={nearbyOffersToRender} variant="near-places" />
+            <OfferList offers={nearbyOffers} variant="near-places" />
           </section>
         </div>
       </main>
