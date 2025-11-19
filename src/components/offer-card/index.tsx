@@ -2,12 +2,12 @@ import { Link } from 'react-router-dom';
 import { Offer } from '../../types/offer';
 import { getRatingWidth } from '../../utils';
 
-type CardVariant = 'cities' | 'near-places';
+type CardVariant = 'cities' | 'near-places' | 'favorites';
 
 type OfferCardProps = {
   offer: Offer;
   variant?: CardVariant;
-  onMouseEnter?: (offerId: number) => void;
+  onMouseEnter?: (offerId: string) => void;
   onMouseLeave?: () => void;
 };
 
@@ -22,7 +22,6 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
     title,
     type,
   } = offer;
-
 
   const ratingWidth = getRatingWidth(rating);
 

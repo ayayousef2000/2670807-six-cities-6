@@ -1,0 +1,14 @@
+.cities__status-button {
+  margin-top: 20px;
+  width: auto;
+  padding: 15px 20px; 
+  background-color: #4481c3;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cities__status-button:hover,
+.cities__status-button:focus {
+  background-color: #376aa5;
+}

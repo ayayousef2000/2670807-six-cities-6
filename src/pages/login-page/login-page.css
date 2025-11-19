@@ -1,6 +1,11 @@
 .login__error-message {
-  color: #ff0000;
+  color: #ff4400;
+  margin-bottom: 10px;
   text-align: center;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+  font-size: 14px;
+}
+
+.login__error-message span {
+  display: block;
+  margin-bottom: 4px;
 }

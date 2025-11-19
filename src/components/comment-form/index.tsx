@@ -1,62 +1,90 @@
-import { useState, ChangeEvent, FormEvent, Fragment } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect, Fragment } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
+import { AppDispatch, RootState } from '../../store';
+import { postCommentAction } from '../../store/api-actions';
+import { resetSendingStatus } from '../../store/offer-slice';
+import './comment-form.css';
 
-const RATING_STARS = [
-  { value: 5, title: 'perfect' },
-  { value: 4, title: 'good' },
-  { value: 3, title: 'not bad' },
-  { value: 2, title: 'badly' },
-  { value: 1, title: 'terribly' },
-];
+const MIN_COMMENT_LENGTH = 50;
+const MAX_COMMENT_LENGTH = 300;
 
-const MIN_REVIEW_LENGTH = 50;
-const MAX_REVIEW_LENGTH = 300;
+const ratingMap = {
+  5: 'perfect',
+  4: 'good',
+  3: 'not bad',
+  2: 'badly',
+  1: 'terribly'
+};
 
 function CommentForm(): JSX.Element {
-  const [rating, setRating] = useState(0);
-  const [review, setReview] = useState('');
+  const dispatch = useDispatch<AppDispatch>();
+  const { id } = useParams();
+  const sendingStatus = useSelector((state: RootState) => state.offer.sendingStatus);
+  const serverError = useSelector((state: RootState) => state.offer.error);
 
-  const handleRatingChange = (evt: ChangeEvent<HTMLInputElement>) => {
-    setRating(Number(evt.target.value));
-  };
+  const [formData, setFormData] = useState({
+    rating: 0,
+    review: '',
+  });
 
-  const handleReviewChange = (evt: ChangeEvent<HTMLTextAreaElement>) => {
-    setReview(evt.target.value);
+  const isSubmitting = sendingStatus === 'loading';
+  const isSuccess = sendingStatus === 'success';
+  const isError = sendingStatus === 'error';
+
+  const isValid =
+    formData.rating > 0 &&
+    formData.review.length >= MIN_COMMENT_LENGTH &&
+    formData.review.length <= MAX_COMMENT_LENGTH;
+
+  useEffect(() => {
+    if (isSuccess) {
+      setFormData({ rating: 0, review: '' });
+      dispatch(resetSendingStatus());
+    }
+  }, [isSuccess, dispatch]);
+
+  const handleFieldChange = (evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = evt.target;
+    setFormData({ ...formData, [name]: name === 'rating' ? Number(value) : value });
+
+    if (isError) {
+      dispatch(resetSendingStatus());
+    }
   };
 
   const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
-    setRating(0);
-    setReview('');
+
+    if (id && isValid) {
+      dispatch(postCommentAction({
+        offerId: id,
+        comment: formData.review,
+        rating: formData.rating
+      }));
+    }
   };
 
-  const isFormValid = review.length >= MIN_REVIEW_LENGTH &&
-                      review.length <= MAX_REVIEW_LENGTH &&
-                      rating > 0;
-
   return (
-    <form
-      className="reviews__form form"
-      action="#"
-      method="post"
-      onSubmit={handleSubmit}
-    >
+    <form className="reviews__form form" action="#" method="post" onSubmit={handleSubmit}>
       <label className="reviews__label form__label" htmlFor="review">Your review</label>
       <div className="reviews__rating-form form__rating">
-        {RATING_STARS.map(({ value, title }) => (
-          <Fragment key={value}>
+        {[5, 4, 3, 2, 1].map((star) => (
+          <Fragment key={star}>
             <input
               className="form__rating-input visually-hidden"
               name="rating"
-              value={value}
-              id={`${value}-stars`}
+              value={star}
+              id={`${star}-stars`}
               type="radio"
-              checked={rating === value}
-              onChange={handleRatingChange}
+              checked={formData.rating === star}
+              onChange={handleFieldChange}
+              disabled={isSubmitting}
             />
             <label
-              htmlFor={`${value}-stars`}
+              htmlFor={`${star}-stars`}
               className="reviews__rating-label form__rating-label"
-              title={title}
+              title={ratingMap[star as keyof typeof ratingMap]}
             >
               <svg className="form__star-image" width="37" height="33">
                 <use xlinkHref="#icon-star"></use>
@@ -70,19 +98,28 @@ function CommentForm(): JSX.Element {
         id="review"
         name="review"
         placeholder="Tell how was your stay, what you like and what can be improved"
-        value={review}
-        onChange={handleReviewChange}
+        value={formData.review}
+        onChange={handleFieldChange}
+        disabled={isSubmitting}
+        maxLength={MAX_COMMENT_LENGTH}
       />
+
+      {isError && serverError && (
+        <div className="reviews__error">
+          {serverError}
+        </div>
+      )}
+
       <div className="reviews__button-wrapper">
         <p className="reviews__help">
-          To submit review please make sure to set <span className="reviews__star">rating</span> and describe your stay with at least <b className="reviews__text-amount">{MIN_REVIEW_LENGTH} characters</b>.
+          To submit review please make sure to set <span className="reviews__star">rating</span> and describe your stay with at least <b className="reviews__text-amount">{MIN_COMMENT_LENGTH} characters</b>.
         </p>
         <button
           className="reviews__submit form__submit button"
           type="submit"
-          disabled={!isFormValid}
+          disabled={!isValid || isSubmitting}
         >
-          Submit
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </button>
       </div>
     </form>

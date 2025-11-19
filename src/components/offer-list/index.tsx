@@ -6,7 +6,7 @@ type ListVariant = 'cities' | 'near-places';
 type OfferListProps = {
   offers: Offer[];
   variant?: ListVariant;
-  onCardMouseEnter?: (offerId: number) => void;
+  onCardMouseEnter?: (offerId: string) => void;
   onCardMouseLeave?: () => void;
 };
 

@@ -7,14 +7,14 @@ interface OffersState {
   city: string;
   offers: Offer[];
   isOffersDataLoading: boolean;
-  hasError: boolean;
+  error: string | null;
 }
 
 const initialState: OffersState = {
   city: CITIES[0],
   offers: [],
   isOffersDataLoading: false,
-  hasError: false,
+  error: null,
 };
 
 export const offersSlice = createSlice({
@@ -29,15 +29,15 @@ export const offersSlice = createSlice({
     builder
       .addCase(fetchOffersAction.pending, (state) => {
         state.isOffersDataLoading = true;
-        state.hasError = false;
+        state.error = null;
       })
       .addCase(fetchOffersAction.fulfilled, (state, action: PayloadAction<Offer[]>) => {
         state.isOffersDataLoading = false;
         state.offers = action.payload;
       })
-      .addCase(fetchOffersAction.rejected, (state) => {
+      .addCase(fetchOffersAction.rejected, (state, action) => {
         state.isOffersDataLoading = false;
-        state.hasError = true;
+        state.error = action.payload || 'Unknown error occurred';
       });
   },
 });

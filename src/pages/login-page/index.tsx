@@ -1,53 +1,52 @@
 import { Link, Navigate } from 'react-router-dom';
-import { FormEvent, useState, useMemo, useEffect, ChangeEvent } from 'react';
+import { FormEvent, useState, ChangeEvent } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { loginAction } from '../../store/api-actions';
 import { AuthorizationStatus, CITIES } from '../../const';
-import { clearLoginError } from '../../store/user-slice';
-import './login-page.css';
+import { RequestStatus } from '../../store/user-slice';
+import { setCity } from '../../store/offers-slice';
 import { AppRoute } from '../../app/routes';
+import './login-page.css';
 
 function LoginPage(): JSX.Element {
   const dispatch = useAppDispatch();
   const authorizationStatus = useAppSelector((state) => state.user.authorizationStatus);
-  const loginError = useAppSelector((state) => state.user.error);
+  const loginStatus = useAppSelector((state) => state.user.requestStatus);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [clientError, setClientError] = useState<string | null>(null);
-
-  const randomCity = useMemo(() => CITIES[Math.floor(Math.random() * CITIES.length)], []);
-
-  useEffect(() => () => {
-    dispatch(clearLoginError());
-  }, [dispatch]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [randomCity] = useState(() => CITIES[Math.floor(Math.random() * CITIES.length)]);
 
   if (authorizationStatus === AuthorizationStatus.Auth) {
     return <Navigate to={AppRoute.Main} />;
   }
 
-  const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
-    evt.preventDefault();
-    const hasLetter = /[a-zA-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    if (!hasLetter || !hasNumber) {
-      setClientError('Password must contain at least one letter and one number.');
-      return;
-    }
-    dispatch(loginAction({
-      login: email,
-      password: password,
-    }));
+  const handleCityLinkClick = () => {
+    dispatch(setCity(randomCity));
   };
 
+  const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
+    evt.preventDefault();
+    setErrorMessage(null);
+
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage('Email and Password are required.');
+      return;
+    }
+
+    dispatch(loginAction({ login: email, password: password }))
+      .unwrap()
+      .catch((error) => {
+        setErrorMessage(error as string);
+      });
+  };
   const handleInputChange = (setter: (value: string) => void) => (evt: ChangeEvent<HTMLInputElement>) => {
     setter(evt.target.value);
-    if (clientError) {
-      setClientError(null);
-    }
-    if (loginError) {
-      dispatch(clearLoginError());
+    if (errorMessage) {
+      setErrorMessage(null);
     }
   };
+  const isSubmitting = loginStatus === RequestStatus.Pending;
 
   return (
     <div className="page page--gray page--login">
@@ -62,6 +61,7 @@ function LoginPage(): JSX.Element {
           </div>
         </div>
       </header>
+
       <main className="page__main page__main--login">
         <div className="page__login-container container">
           <section className="login">
@@ -71,6 +71,7 @@ function LoginPage(): JSX.Element {
               action="#"
               method="post"
               onSubmit={handleSubmit}
+              noValidate
             >
               <div className="login__input-wrapper form__input-wrapper">
                 <label className="visually-hidden">E-mail</label>
@@ -82,6 +83,8 @@ function LoginPage(): JSX.Element {
                   required
                   value={email}
                   onChange={handleInputChange(setEmail)}
+                  disabled={isSubmitting}
+                  data-testid="email-input"
                 />
               </div>
               <div className="login__input-wrapper form__input-wrapper">
@@ -94,26 +97,35 @@ function LoginPage(): JSX.Element {
                   required
                   value={password}
                   onChange={handleInputChange(setPassword)}
+                  disabled={isSubmitting}
+                  data-testid="password-input"
                 />
               </div>
 
-              {(clientError || loginError) && (
-                <p className="login__error-message"> {/* Use the new CSS class */}
-                  {clientError || loginError}
-                </p>
+              {errorMessage && (
+                <div className="login__error-message">
+                  {errorMessage.split('\n').map((msg) => (
+                    <span key={msg}>{msg}</span>
+                  ))}
+                </div>
               )}
 
               <button
                 className="login__submit form__submit button"
                 type="submit"
+                disabled={isSubmitting}
               >
-                Sign in
+                {isSubmitting ? 'Signing in...' : 'Sign in'}
               </button>
             </form>
           </section>
           <section className="locations locations--login locations--current">
             <div className="locations__item">
-              <Link className="locations__item-link" to={AppRoute.Main}>
+              <Link
+                className="locations__item-link"
+                to={AppRoute.Main}
+                onClick={handleCityLinkClick}
+              >
                 <span>{randomCity}</span>
               </Link>
             </div>

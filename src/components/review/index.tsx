@@ -5,9 +5,18 @@ type ReviewProps = {
   review: ReviewType;
 };
 
+function formatUserName(name: string): string {
+  return name
+    .split('.')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 function Review({ review }: ReviewProps): JSX.Element {
   const { user, rating, comment, date } = review;
   const { name, avatarUrl } = user;
+
+  const displayName = formatUserName(name);
 
   const reviewDate = new Date(date);
   const formattedDate = reviewDate.toLocaleDateString('en-US', {
@@ -24,10 +33,10 @@ function Review({ review }: ReviewProps): JSX.Element {
             src={avatarUrl}
             width={54}
             height={54}
-            alt="Reviews avatar"
+            alt={displayName}
           />
         </div>
-        <span className="reviews__user-name">{name}</span>
+        <span className="reviews__user-name">{displayName}</span>
       </div>
       <div className="reviews__info">
         <div className="reviews__rating rating">
