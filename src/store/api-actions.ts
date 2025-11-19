@@ -62,7 +62,7 @@ export const fetchOfferAction = createAsyncThunk<
       return rejectWithValue('NOT_FOUND');
     }
 
-    if (axiosError.response && axiosError.response.data) {
+    if (axiosError.response?.data) {
       return rejectWithValue(axiosError.response.data.message);
     }
     return rejectWithValue('Failed to fetch offer');
@@ -84,7 +84,7 @@ export const fetchReviewsAction = createAsyncThunk<
     return data;
   } catch (error) {
     const axiosError = error as AxiosError<CommonError>;
-    if (axiosError.response && axiosError.response.data) {
+    if (axiosError.response?.data) {
       return rejectWithValue(axiosError.response.data.message);
     }
     return rejectWithValue('Failed to fetch reviews');
@@ -106,7 +106,7 @@ export const fetchNearbyAction = createAsyncThunk<
     return data;
   } catch (error) {
     const axiosError = error as AxiosError<CommonError>;
-    if (axiosError.response && axiosError.response.data) {
+    if (axiosError.response?.data) {
       return rejectWithValue(axiosError.response.data.message);
     }
     return rejectWithValue('Failed to fetch nearby offers');
@@ -129,21 +129,28 @@ export const postCommentAction = createAsyncThunk<
   } catch (error) {
     const axiosError = error as AxiosError<ValidationError>;
 
-    if (axiosError.response && axiosError.response.data) {
-      const responseData = axiosError.response.data;
+    if (axiosError.response) {
+      const { status, data } = axiosError.response;
 
-      if (responseData.details && responseData.details.length > 0) {
-        const allErrors = responseData.details
-          .map((detail) => detail.messages)
-          .flat();
-        return rejectWithValue(allErrors.join('\n'));
+      if (status === 400 && data.details && data.details.length > 0) {
+        const errorMessages = data.details.map((detail) => detail.messages).flat();
+        return rejectWithValue(errorMessages.join('. '));
       }
 
-      if (responseData.message) {
-        return rejectWithValue(responseData.message);
+      if (status === 401) {
+        return rejectWithValue('You are not authorized. Please log in.');
+      }
+
+      if (status === 404) {
+        return rejectWithValue('This offer does not exist anymore.');
+      }
+
+      if (data.message) {
+        return rejectWithValue(data.message);
       }
     }
-    return rejectWithValue('Failed to post comment');
+
+    return rejectWithValue('Failed to post comment. Please try again.');
   }
 });
 
@@ -182,7 +189,7 @@ export const loginAction = createAsyncThunk<
   } catch (error) {
     const axiosError = error as AxiosError<ValidationError>;
 
-    if (axiosError.response && axiosError.response.data) {
+    if (axiosError.response?.data) {
       const responseData = axiosError.response.data;
       if (responseData.details && responseData.details.length > 0) {
         const allErrors = responseData.details

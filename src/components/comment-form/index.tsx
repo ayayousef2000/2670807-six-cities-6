@@ -4,6 +4,10 @@ import { useParams } from 'react-router-dom';
 import { AppDispatch, RootState } from '../../store';
 import { postCommentAction } from '../../store/api-actions';
 import { resetSendingStatus } from '../../store/offer-slice';
+import './comment-form.css';
+
+const MIN_COMMENT_LENGTH = 50;
+const MAX_COMMENT_LENGTH = 300;
 
 const ratingMap = {
   5: 'perfect',
@@ -17,28 +21,36 @@ function CommentForm(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
   const { id } = useParams();
   const sendingStatus = useSelector((state: RootState) => state.offer.sendingStatus);
+  const serverError = useSelector((state: RootState) => state.offer.error);
 
   const [formData, setFormData] = useState({
     rating: 0,
     review: '',
   });
 
-  const isSubmitting = sendingStatus === 'pending';
+  const isSubmitting = sendingStatus === 'loading';
+  const isSuccess = sendingStatus === 'success';
+  const isError = sendingStatus === 'error';
+
   const isValid =
     formData.rating > 0 &&
-    formData.review.length >= 50 &&
-    formData.review.length <= 300;
+    formData.review.length >= MIN_COMMENT_LENGTH &&
+    formData.review.length <= MAX_COMMENT_LENGTH;
 
   useEffect(() => {
-    if (sendingStatus === 'success') {
+    if (isSuccess) {
       setFormData({ rating: 0, review: '' });
       dispatch(resetSendingStatus());
     }
-  }, [sendingStatus, dispatch]);
+  }, [isSuccess, dispatch]);
 
   const handleFieldChange = (evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = evt.target;
     setFormData({ ...formData, [name]: name === 'rating' ? Number(value) : value });
+
+    if (isError) {
+      dispatch(resetSendingStatus());
+    }
   };
 
   const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
@@ -89,17 +101,25 @@ function CommentForm(): JSX.Element {
         value={formData.review}
         onChange={handleFieldChange}
         disabled={isSubmitting}
+        maxLength={MAX_COMMENT_LENGTH}
       />
+
+      {isError && serverError && (
+        <div className="reviews__error">
+          {serverError}
+        </div>
+      )}
+
       <div className="reviews__button-wrapper">
         <p className="reviews__help">
-          To submit review please make sure to set <span className="reviews__star">rating</span> and describe your stay with at least <b className="reviews__text-amount">50 characters</b>.
+          To submit review please make sure to set <span className="reviews__star">rating</span> and describe your stay with at least <b className="reviews__text-amount">{MIN_COMMENT_LENGTH} characters</b>.
         </p>
         <button
           className="reviews__submit form__submit button"
           type="submit"
           disabled={!isValid || isSubmitting}
         >
-          Submit
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </button>
       </div>
     </form>

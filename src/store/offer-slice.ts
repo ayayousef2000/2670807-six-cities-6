@@ -9,6 +9,7 @@ interface OfferState {
   offer: Offer | null;
   reviews: Review[];
   nearbyOffers: Offer[];
+  error: string | null;
   offerStatus: RequestStatus;
   reviewsStatus: RequestStatus;
   nearbyStatus: RequestStatus;
@@ -19,6 +20,7 @@ const initialState: OfferState = {
   offer: null,
   reviews: [],
   nearbyOffers: [],
+  error: null,
   offerStatus: 'idle',
   reviewsStatus: 'idle',
   nearbyStatus: 'idle',
@@ -33,6 +35,7 @@ export const offerSlice = createSlice({
       state.offer = null;
       state.reviews = [];
       state.nearbyOffers = [];
+      state.error = null;
       state.offerStatus = 'idle';
       state.reviewsStatus = 'idle';
       state.nearbyStatus = 'idle';
@@ -40,6 +43,7 @@ export const offerSlice = createSlice({
     },
     resetSendingStatus: (state) => {
       state.sendingStatus = 'idle';
+      state.error = null;
     },
   },
   extraReducers(builder) {
@@ -80,13 +84,16 @@ export const offerSlice = createSlice({
       })
       .addCase(postCommentAction.pending, (state) => {
         state.sendingStatus = 'loading';
+        state.error = null;
       })
       .addCase(postCommentAction.fulfilled, (state, action: PayloadAction<Review>) => {
         state.sendingStatus = 'success';
         state.reviews.push(action.payload);
+        state.error = null;
       })
-      .addCase(postCommentAction.rejected, (state) => {
+      .addCase(postCommentAction.rejected, (state, action) => {
         state.sendingStatus = 'error';
+        state.error = action.payload as string;
       });
   },
 });
