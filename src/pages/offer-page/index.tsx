@@ -8,7 +8,9 @@ import {
   selectOffer,
   selectOfferStatus,
   selectSortedReviews,
+  selectReviewsStatus,
   selectNearbyOffersToRender,
+  selectNearbyStatus,
   selectOfferPageMapPoints
 } from '../../store/offer-selectors';
 import { AuthorizationStatus } from '../../const';
@@ -26,9 +28,11 @@ function OfferPage(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
 
   const offer = useSelector(selectOffer);
-  const status = useSelector(selectOfferStatus);
+  const offerStatus = useSelector(selectOfferStatus);
   const reviews = useSelector(selectSortedReviews);
+  const reviewsStatus = useSelector(selectReviewsStatus);
   const nearbyOffers = useSelector(selectNearbyOffersToRender);
+  const nearbyStatus = useSelector(selectNearbyStatus);
   const mapPoints = useSelector(selectOfferPageMapPoints);
 
   const authorizationStatus = useSelector(
@@ -43,16 +47,27 @@ function OfferPage(): JSX.Element {
     }
   }, [id, dispatch]);
 
+  const handleRetryReviews = () => {
+    if (id) {
+      dispatch(fetchReviewsAction(id));
+    }
+  };
+
+  const handleRetryNearby = () => {
+    if (id) {
+      dispatch(fetchNearbyAction(id));
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
     loadData();
-
     return () => {
       dispatch(dropOffer());
     };
   }, [loadData, dispatch]);
 
-  if (status === 'loading' || status === 'idle') {
+  if (offerStatus === 'loading' || offerStatus === 'idle') {
     return (
       <div className="page">
         <main className="page__main page__main--offer">
@@ -64,11 +79,11 @@ function OfferPage(): JSX.Element {
     );
   }
 
-  if (status === 'notFound') {
+  if (offerStatus === 'notFound') {
     return <NotFoundPage />;
   }
 
-  if (status === 'error' || !offer) {
+  if (offerStatus === 'error' || !offer) {
     return (
       <div className="page">
         <main className="page__main page__main--offer">
@@ -78,11 +93,7 @@ function OfferPage(): JSX.Element {
               <p className="cities__status-description">
                   Please check your internet connection or try again later.
               </p>
-              <button
-                className="button form__submit"
-                style={{marginTop: '20px'}}
-                onClick={loadData}
-              >
+              <button className="button form__submit" style={{marginTop: '20px'}} onClick={loadData}>
                   Try Again
               </button>
             </section>
@@ -133,10 +144,7 @@ function OfferPage(): JSX.Element {
               )}
               <div className="offer__name-wrapper">
                 <h1 className="offer__name">{title}</h1>
-                <button
-                  className={`offer__bookmark-button ${isFavorite ? 'offer__bookmark-button--active' : ''} button`}
-                  type="button"
-                >
+                <button className={`offer__bookmark-button ${isFavorite ? 'offer__bookmark-button--active' : ''} button`} type="button">
                   <svg className="offer__bookmark-icon" width="31" height="33">
                     <use xlinkHref="#icon-bookmark"></use>
                   </svg>
@@ -171,13 +179,7 @@ function OfferPage(): JSX.Element {
                 <h2 className="offer__host-title">Meet the host</h2>
                 <div className="offer__host-user user">
                   <div className={`offer__avatar-wrapper ${host.isPro ? 'offer__avatar-wrapper--pro' : ''} user__avatar-wrapper`}>
-                    <img
-                      className="offer__avatar user__avatar"
-                      src={host.avatarUrl}
-                      width={74}
-                      height={74}
-                      alt="Host avatar"
-                    />
+                    <img className="offer__avatar user__avatar" src={host.avatarUrl} width={74} height={74} alt="Host avatar" />
                   </div>
                   <span className="offer__user-name">{host.name}</span>
                   {host.isPro && <span className="offer__user-status">Pro</span>}
@@ -186,23 +188,40 @@ function OfferPage(): JSX.Element {
                   <p className="offer__text">{description}</p>
                 </div>
               </div>
+
               <section className="offer__reviews reviews">
-                <ReviewsList reviews={reviews} />
+                {reviewsStatus === 'error' ? (
+                  <div className="reviews__error">
+                    <p className="reviews__error-text">Failed to load reviews.</p>
+                    <button className="reviews__retry-button" onClick={handleRetryReviews}>
+                      Try again
+                    </button>
+                  </div>
+                ) : (
+                  <ReviewsList reviews={reviews} />
+                )}
+
                 {isAuthorized && <CommentForm />}
               </section>
             </div>
           </div>
-          <Map
-            className="offer__map map"
-            city={city}
-            points={mapPoints}
-            selectedPoint={offer}
-          />
+          <Map className="offer__map map" city={city} points={mapPoints} selectedPoint={offer} />
         </section>
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            <OfferList offers={nearbyOffers} variant="near-places" />
+
+            {nearbyStatus === 'error' ? (
+              <div className="near-places__error">
+                <p className="near-places__error-text">Failed to load nearby places.</p>
+                <button className="near-places__retry-button" onClick={handleRetryNearby}>
+                  Try again
+                </button>
+              </div>
+            ) : (
+              <OfferList offers={nearbyOffers} variant="near-places" />
+            )}
+
           </section>
         </div>
       </main>
