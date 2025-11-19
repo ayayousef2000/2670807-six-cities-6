@@ -1,24 +1,63 @@
-import { useSelector } from 'react-redux';
+import { useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../store';
+import { fetchOfferAction, fetchReviewsAction, fetchNearbyAction } from '../../store/api-actions';
+import { dropOffer } from '../../store/offer-slice';
+import { AuthorizationStatus } from '../../const';
 import CommentForm from '../../components/comment-form';
 import Map from '../../components/map';
 import OfferList from '../../components/offer-list';
 import ReviewsList from '../../components/reviews-list';
 import NotFoundPage from '../not-found-page';
 import Spinner from '../../components/spinner';
-import { RootState } from '../../store';
-
 import { getRatingWidth } from '../../utils';
+import './offer-page.css';
 
 function OfferPage(): JSX.Element {
+  const { id } = useParams();
+  const dispatch = useDispatch<AppDispatch>();
+
   const {
     offer,
     reviews,
     nearbyOffers,
-    isOfferDataLoading,
+    isOfferLoading,
     hasError,
   } = useSelector((state: RootState) => state.offer);
 
-  if (isOfferDataLoading || !offer && !hasError) {
+  const authorizationStatus = useSelector(
+    (state: RootState) => state.user.authorizationStatus
+  );
+
+  useEffect(() => {
+    if (id) {
+      window.scrollTo(0, 0);
+      dispatch(fetchOfferAction(id));
+      dispatch(fetchReviewsAction(id));
+      dispatch(fetchNearbyAction(id));
+    }
+
+    return () => {
+      dispatch(dropOffer());
+    };
+  }, [id, dispatch]);
+
+  const { nearbyOffersToRender, mapPoints } = useMemo(() => {
+    if (!offer) {
+      return { nearbyOffersToRender: [], mapPoints: [] };
+    }
+
+    const nearby = nearbyOffers.slice(0, 3);
+    const points = [...nearby.filter((o) => o.id !== offer.id), offer];
+
+    return {
+      nearbyOffersToRender: nearby,
+      mapPoints: points
+    };
+  }, [offer, nearbyOffers]);
+
+  if (isOfferLoading || (!offer && !hasError)) {
     return <Spinner />;
   }
 
@@ -39,10 +78,11 @@ function OfferPage(): JSX.Element {
     goods,
     host,
     description,
+    city
   } = offer;
 
   const ratingWidth = getRatingWidth(rating);
-  const mapPoints = [...nearbyOffers, offer];
+  const isAuthorized = authorizationStatus === AuthorizationStatus.Auth;
 
   return (
     <div className="page">
@@ -50,7 +90,7 @@ function OfferPage(): JSX.Element {
         <section className="offer">
           <div className="offer__gallery-container container">
             <div className="offer__gallery">
-              {images.slice(0, 6).map((imageSrc: string) => (
+              {images.slice(0, 6).map((imageSrc) => (
                 <div className="offer__image-wrapper" key={imageSrc}>
                   <img className="offer__image" src={imageSrc} alt={title} />
                 </div>
@@ -66,7 +106,10 @@ function OfferPage(): JSX.Element {
               )}
               <div className="offer__name-wrapper">
                 <h1 className="offer__name">{title}</h1>
-                <button className={`offer__bookmark-button ${isFavorite ? 'offer__bookmark-button--active' : ''} button`} type="button">
+                <button
+                  className={`offer__bookmark-button ${isFavorite ? 'offer__bookmark-button--active' : ''} button`}
+                  type="button"
+                >
                   <svg className="offer__bookmark-icon" width="31" height="33">
                     <use xlinkHref="#icon-bookmark"></use>
                   </svg>
@@ -92,7 +135,7 @@ function OfferPage(): JSX.Element {
               <div className="offer__inside">
                 <h2 className="offer__inside-title">What&apos;s inside</h2>
                 <ul className="offer__inside-list">
-                  {goods.map((good: string) => (
+                  {goods.map((good) => (
                     <li className="offer__inside-item" key={good}>{good}</li>
                   ))}
                 </ul>
@@ -118,23 +161,21 @@ function OfferPage(): JSX.Element {
               </div>
               <section className="offer__reviews reviews">
                 <ReviewsList reviews={reviews} />
-                <CommentForm />
+                {isAuthorized && <CommentForm />}
               </section>
             </div>
           </div>
-          <section className="offer__map map">
-            <Map
-              city={offer.city}
-              points={mapPoints}
-              selectedPoint={offer}
-              className="offer__map"
-            />
-          </section>
+          <Map
+            className="offer__map map"
+            city={city}
+            points={mapPoints}
+            selectedPoint={offer}
+          />
         </section>
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            <OfferList offers={nearbyOffers} variant="near-places" />
+            <OfferList offers={nearbyOffersToRender} variant="near-places" />
           </section>
         </div>
       </main>

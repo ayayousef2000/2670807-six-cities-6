@@ -18,6 +18,11 @@ interface ValidationError {
   }[];
 }
 
+interface CommonError {
+  errorType: string;
+  message: string;
+}
+
 export const fetchOffersAction = createAsyncThunk<
   Offer[],
   undefined,
@@ -32,11 +37,110 @@ export const fetchOffersAction = createAsyncThunk<
     const { data } = await api.get<Offer[]>(APIRoute.Offers);
     return data;
   } catch (error) {
-    const axiosError = error as AxiosError<{ message: string }>;
+    const axiosError = error as AxiosError<CommonError>;
+    return rejectWithValue(axiosError.response?.data?.message || 'Failed to fetch offers');
+  }
+});
+
+export const fetchOfferAction = createAsyncThunk<
+  Offer,
+  string,
+  {
+    dispatch: AppDispatch;
+    state: RootState;
+    extra: AxiosInstance;
+    rejectValue: string;
+  }
+>('data/fetchOffer', async (offerId, { extra: api, rejectWithValue }) => {
+  try {
+    const { data } = await api.get<Offer>(`${APIRoute.Offers}/${offerId}`);
+    return data;
+  } catch (error) {
+    const axiosError = error as AxiosError<CommonError>;
+
     if (axiosError.response && axiosError.response.data) {
       return rejectWithValue(axiosError.response.data.message);
     }
-    return rejectWithValue(axiosError.message || 'Failed to fetch offers');
+    return rejectWithValue('Failed to fetch offer');
+  }
+});
+
+export const fetchReviewsAction = createAsyncThunk<
+  Review[],
+  string,
+  {
+    dispatch: AppDispatch;
+    state: RootState;
+    extra: AxiosInstance;
+    rejectValue: string;
+  }
+>('data/fetchReviews', async (offerId, { extra: api, rejectWithValue }) => {
+  try {
+    const { data } = await api.get<Review[]>(`${APIRoute.Comments}/${offerId}`);
+    return data;
+  } catch (error) {
+    const axiosError = error as AxiosError<CommonError>;
+    if (axiosError.response && axiosError.response.data) {
+      return rejectWithValue(axiosError.response.data.message);
+    }
+    return rejectWithValue('Failed to fetch reviews');
+  }
+});
+
+export const fetchNearbyAction = createAsyncThunk<
+  Offer[],
+  string,
+  {
+    dispatch: AppDispatch;
+    state: RootState;
+    extra: AxiosInstance;
+    rejectValue: string;
+  }
+>('data/fetchNearby', async (offerId, { extra: api, rejectWithValue }) => {
+  try {
+    const { data } = await api.get<Offer[]>(`${APIRoute.Offers}/${offerId}/nearby`);
+    return data;
+  } catch (error) {
+    const axiosError = error as AxiosError<CommonError>;
+    // Handle 404 for nearby offers as per your screenshot
+    if (axiosError.response && axiosError.response.data) {
+      return rejectWithValue(axiosError.response.data.message);
+    }
+    return rejectWithValue('Failed to fetch nearby offers');
+  }
+});
+
+export const postCommentAction = createAsyncThunk<
+  Review,
+  { offerId: string; comment: string; rating: number },
+  {
+    dispatch: AppDispatch;
+    state: RootState;
+    extra: AxiosInstance;
+    rejectValue: string;
+  }
+>('data/postComment', async ({ offerId, comment, rating }, { extra: api, rejectWithValue }) => {
+  try {
+    const { data } = await api.post<Review>(`${APIRoute.Comments}/${offerId}`, { comment, rating });
+    return data;
+  } catch (error) {
+    const axiosError = error as AxiosError<ValidationError>;
+
+    if (axiosError.response && axiosError.response.data) {
+      const responseData = axiosError.response.data;
+
+      if (responseData.details && responseData.details.length > 0) {
+        const allErrors = responseData.details
+          .map((detail) => detail.messages)
+          .flat();
+        return rejectWithValue(allErrors.join('\n'));
+      }
+
+      if (responseData.message) {
+        return rejectWithValue(responseData.message);
+      }
+    }
+    return rejectWithValue('Failed to post comment');
   }
 });
 
@@ -77,20 +181,16 @@ export const loginAction = createAsyncThunk<
 
     if (axiosError.response && axiosError.response.data) {
       const responseData = axiosError.response.data;
-
       if (responseData.details && responseData.details.length > 0) {
         const allErrors = responseData.details
           .map((detail) => detail.messages)
           .flat();
-
         return rejectWithValue(allErrors.join('\n'));
       }
-
       if (responseData.message) {
         return rejectWithValue(responseData.message);
       }
     }
-
     return rejectWithValue('Unable to sign in. Please try again later.');
   }
 });
@@ -109,30 +209,4 @@ export const logoutAction = createAsyncThunk<
   } finally {
     dropToken();
   }
-});
-
-export const fetchOfferDataAction = createAsyncThunk<
-  {
-    offer: Offer;
-    reviews: Review[];
-    nearbyOffers: Offer[];
-  },
-  string,
-  {
-    dispatch: AppDispatch;
-    state: RootState;
-    extra: AxiosInstance;
-  }
->('data/fetchOfferData', async (offerId, { extra: api }) => {
-  const [offer, reviews, nearbyOffers] = await Promise.all([
-    api.get<Offer>(`${APIRoute.Offers}/${offerId}`),
-    api.get<Review[]>(`${APIRoute.Comments}/${offerId}`),
-    api.get<Offer[]>(`${APIRoute.Offers}/${offerId}/nearby`),
-  ]);
-
-  return {
-    offer: offer.data,
-    reviews: reviews.data,
-    nearbyOffers: nearbyOffers.data,
-  };
 });

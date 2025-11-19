@@ -8,8 +8,9 @@ import { URL_MARKER_DEFAULT, URL_MARKER_CURRENT } from '../../const';
 type MapProps = {
   city: Offer['city'];
   points: Offer[];
-  selectedPoint?: Offer;
-  className: string;
+  selectedPoint: Offer | undefined;
+  className?: string;
+  style?: React.CSSProperties;
 };
 
 const defaultCustomIcon = new Icon({
@@ -24,50 +25,58 @@ const currentCustomIcon = new Icon({
   iconAnchor: [20, 40]
 });
 
-function Map({ city, points, selectedPoint, className }: MapProps): JSX.Element {
+function Map({ city, points, selectedPoint, className = 'map', style }: MapProps): JSX.Element {
   const mapRef = useRef(null);
   const map = useMap(mapRef, city);
 
-  const markersRef = useRef<Record<string, Marker>>({});
+  useEffect(() => {
+    if (map) {
+      map.setView(
+        {
+          lat: city.location.latitude,
+          lng: city.location.longitude
+        },
+        city.location.zoom
+      );
+    }
+  }, [map, city]);
 
   useEffect(() => {
     if (map) {
       const markerLayer = layerGroup().addTo(map);
+
       points.forEach((point) => {
+        const isSelected = selectedPoint && point.id === selectedPoint.id;
+
         const marker = new Marker({
           lat: point.location.latitude,
           lng: point.location.longitude
         });
 
-        marker.setIcon(defaultCustomIcon);
+        marker.setIcon(
+          isSelected ? currentCustomIcon : defaultCustomIcon
+        );
+
+        if (isSelected) {
+          marker.setZIndexOffset(1000);
+        }
 
         marker.addTo(markerLayer);
-        markersRef.current[point.id] = marker;
       });
 
       return () => {
         map.removeLayer(markerLayer);
-        markersRef.current = {};
       };
     }
-  }, [map, points]);
+  }, [map, points, selectedPoint]);
 
-  useEffect(() => {
-    if (map && Object.keys(markersRef.current).length > 0) {
-      Object.values(markersRef.current).forEach((marker) => {
-        marker.setIcon(defaultCustomIcon);
-      });
-
-      if (selectedPoint) {
-        const selectedMarker = markersRef.current[selectedPoint.id];
-        if (selectedMarker) {
-          selectedMarker.setIcon(currentCustomIcon);
-        }
-      }
-    }
-  }, [map, selectedPoint]);
-
-  return <div className={className} ref={mapRef}></div>;
+  return (
+    <section
+      className={className}
+      ref={mapRef}
+      style={style}
+    />
+  );
 }
 
 export default Map;
