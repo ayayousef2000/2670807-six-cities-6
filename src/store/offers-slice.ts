@@ -36,8 +36,11 @@ export const offersSlice = createSlice({
         state.offers = action.payload;
       })
       .addCase(fetchOffersAction.rejected, (state, action) => {
+        if (action.error.message === 'Aborted') {
+          return;
+        }
         state.isOffersDataLoading = false;
-        state.error = action.payload || 'Unknown error occurred';
+        state.error = action.payload || action.error.message || 'Unknown error occurred';
       });
   },
 });

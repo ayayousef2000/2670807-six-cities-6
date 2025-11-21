@@ -38,7 +38,10 @@ export const fetchOffersAction = createAsyncThunk<
     return data;
   } catch (error) {
     const axiosError = error as AxiosError<CommonError>;
-    return rejectWithValue(axiosError.response?.data?.message || 'Failed to fetch offers');
+    if (!axiosError.response) {
+      return rejectWithValue('Unable to connect to the server. Please try again later.');
+    }
+    return rejectWithValue(axiosError.response.data?.message || 'Failed to load offers.');
   }
 });
 
