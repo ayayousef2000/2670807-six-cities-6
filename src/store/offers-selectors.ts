@@ -9,6 +9,11 @@ export const selectOffers = (state: RootState) => state.offers.offers;
 export const selectIsOffersDataLoading = (state: RootState) => state.offers.isOffersDataLoading;
 export const selectError = (state: RootState) => state.offers.error;
 
+export const selectFavoriteOffersCount = createSelector(
+  [selectOffers],
+  (offers) => offers.filter((offer) => offer.isFavorite).length
+);
+
 export const selectCityOffers = createSelector(
   [selectOffers, selectCity],
   (offers, city) => offers.filter((offer) => offer.city.name === city)

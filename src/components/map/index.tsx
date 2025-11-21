@@ -100,5 +100,14 @@ function MapComponent({ city, points, selectedPoint, className = 'map', style }:
   );
 }
 
-const Map = memo(MapComponent);
+function mapPropsAreEqual(prev: MapProps, next: MapProps) {
+  return (
+    prev.city.name === next.city.name &&
+    prev.selectedPoint?.id === next.selectedPoint?.id &&
+    prev.points.length === next.points.length &&
+    prev.points[0]?.id === next.points[0]?.id
+  );
+}
+
+const Map = memo(MapComponent, mapPropsAreEqual);
 export default Map;

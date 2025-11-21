@@ -1,22 +1,20 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { AppRoute } from '../../app/routes';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { AuthorizationStatus } from '../../const';
 import { logoutAction } from '../../store/api-actions';
 import { RequestStatus } from '../../store/user-slice';
+import { selectFavoriteOffersCount } from '../../store/offers-selectors';
 import UserAuth from './user-auth';
 import UserGuest from './user-guest';
 
-type HeaderProps = {
-  favoriteCount?: number;
-};
-
-function Header({ favoriteCount }: HeaderProps): JSX.Element {
+function HeaderComponent(): JSX.Element {
   const dispatch = useAppDispatch();
   const authorizationStatus = useAppSelector((state) => state.user.authorizationStatus);
   const user = useAppSelector((state) => state.user.user);
   const requestStatus = useAppSelector((state) => state.user.requestStatus);
-  const displayCount = favoriteCount ?? 0;
+  const favoriteCount = useAppSelector(selectFavoriteOffersCount);
   const isLoggingOut = requestStatus === RequestStatus.Pending;
 
   const handleSignOut = () => {
@@ -37,7 +35,7 @@ function Header({ favoriteCount }: HeaderProps): JSX.Element {
               {authorizationStatus === AuthorizationStatus.Auth ? (
                 <UserAuth
                   user={user}
-                  favoriteCount={displayCount}
+                  favoriteCount={favoriteCount}
                   onSignOut={handleSignOut}
                   isLoggingOut={isLoggingOut}
                 />
@@ -52,4 +50,5 @@ function Header({ favoriteCount }: HeaderProps): JSX.Element {
   );
 }
 
+const Header = memo(HeaderComponent);
 export default Header;

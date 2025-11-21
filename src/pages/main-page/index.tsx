@@ -60,6 +60,7 @@ function MainPage(): JSX.Element {
   const offersCount = cityOffers.length;
   const hasOffers = offersCount > 0;
   const isMainEmpty = !hasOffers || !!error;
+  const selectedPoint = cityOffers.find((offer) => offer.id === activeOfferId);
 
   if (isOffersDataLoading && !hasOffers) {
     return <Spinner />;
@@ -127,7 +128,7 @@ function MainPage(): JSX.Element {
               <Map
                 city={cityOffers[0].city}
                 points={cityOffers}
-                selectedPoint={cityOffers.find((offer) => offer.id === activeOfferId)}
+                selectedPoint={selectedPoint}
                 className="cities__map"
               />
             )}
