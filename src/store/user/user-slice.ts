@@ -1,13 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { AuthorizationStatus } from '../const';
-import { UserData } from '../types/user-data';
-import { checkAuthAction, loginAction, logoutAction } from './api-actions';
+import { AuthorizationStatus, NameSpace } from '../../const';
+import { UserData } from '../../types/user-data';
+import { checkAuthAction, loginAction, logoutAction } from './user-thunks';
 
 export enum RequestStatus {
   Idle = 'IDLE',
-  Pending = 'PENDING',
+  Loading = 'LOADING',
   Success = 'SUCCESS',
-  Failed = 'FAILED',
+  Error = 'ERROR',
 }
 
 interface UserState {
@@ -23,7 +23,7 @@ const initialState: UserState = {
 };
 
 export const userSlice = createSlice({
-  name: 'user',
+  name: NameSpace.User,
   initialState,
   reducers: {},
   extraReducers(builder) {
@@ -34,9 +34,10 @@ export const userSlice = createSlice({
       })
       .addCase(checkAuthAction.rejected, (state) => {
         state.authorizationStatus = AuthorizationStatus.NoAuth;
+        state.user = null;
       })
       .addCase(loginAction.pending, (state) => {
-        state.requestStatus = RequestStatus.Pending;
+        state.requestStatus = RequestStatus.Loading;
       })
       .addCase(loginAction.fulfilled, (state, action) => {
         state.requestStatus = RequestStatus.Success;
@@ -44,11 +45,11 @@ export const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(loginAction.rejected, (state) => {
-        state.requestStatus = RequestStatus.Failed;
+        state.requestStatus = RequestStatus.Error;
         state.authorizationStatus = AuthorizationStatus.NoAuth;
       })
       .addCase(logoutAction.pending, (state) => {
-        state.requestStatus = RequestStatus.Pending;
+        state.requestStatus = RequestStatus.Loading;
       })
       .addCase(logoutAction.fulfilled, (state) => {
         state.requestStatus = RequestStatus.Success;
@@ -56,7 +57,7 @@ export const userSlice = createSlice({
         state.user = null;
       })
       .addCase(logoutAction.rejected, (state) => {
-        state.requestStatus = RequestStatus.Failed;
+        state.requestStatus = RequestStatus.Error;
         state.authorizationStatus = AuthorizationStatus.NoAuth;
         state.user = null;
       });

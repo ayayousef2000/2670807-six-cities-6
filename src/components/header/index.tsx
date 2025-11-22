@@ -1,25 +1,31 @@
-import { memo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AppRoute } from '../../app/routes';
-import { useAppSelector, useAppDispatch } from '../../hooks';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { AuthorizationStatus } from '../../const';
-import { logoutAction } from '../../store/api-actions';
-import { RequestStatus } from '../../store/user-slice';
-import { selectFavoriteOffersCount } from '../../store/offers-selectors';
+import { logoutAction } from '../../store/user/user-thunks';
+import { selectAuthorizationStatus, selectUser, selectUserRequestStatus } from '../../store/user/user-selectors';
+import { selectOffers } from '../../store/offers/offers-selectors';
+import { RequestStatus } from '../../store/user/user-slice';
 import UserAuth from './user-auth';
 import UserGuest from './user-guest';
 
 function HeaderComponent(): JSX.Element {
   const dispatch = useAppDispatch();
-  const authorizationStatus = useAppSelector((state) => state.user.authorizationStatus);
-  const user = useAppSelector((state) => state.user.user);
-  const requestStatus = useAppSelector((state) => state.user.requestStatus);
-  const favoriteCount = useAppSelector(selectFavoriteOffersCount);
-  const isLoggingOut = requestStatus === RequestStatus.Pending;
+  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
+  const user = useAppSelector(selectUser);
+  const requestStatus = useAppSelector(selectUserRequestStatus);
+  const offers = useAppSelector(selectOffers);
 
-  const handleSignOut = () => {
+  const favoriteCount = useMemo(() =>
+    offers.filter((offer) => offer.isFavorite).length,
+  [offers]);
+
+  const isLoggingOut = requestStatus === RequestStatus.Loading;
+
+  const handleSignOut = useCallback(() => {
     dispatch(logoutAction());
-  };
+  }, [dispatch]);
 
   return (
     <header className="header">
@@ -32,7 +38,7 @@ function HeaderComponent(): JSX.Element {
           </div>
           <nav className="header__nav">
             <ul className="header__nav-list">
-              {authorizationStatus === AuthorizationStatus.Auth ? (
+              {authorizationStatus === AuthorizationStatus.Auth && user ? (
                 <UserAuth
                   user={user}
                   favoriteCount={favoriteCount}

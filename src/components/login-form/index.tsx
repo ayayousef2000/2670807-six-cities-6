@@ -1,18 +1,15 @@
 import { FormEvent, useState, ChangeEvent, useCallback, memo } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks';
-import { loginAction } from '../../store/api-actions';
-import { RequestStatus } from '../../store/user-slice';
+import { useAppDispatch } from '../../hooks';
+import { loginAction } from '../../store/user/user-thunks';
 import './login-form.css';
 
 function LoginForm(): JSX.Element {
   const dispatch = useAppDispatch();
-  const loginStatus = useAppSelector((state) => state.user.requestStatus);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const isSubmitting = loginStatus === RequestStatus.Pending;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleEmailChange = useCallback((evt: ChangeEvent<HTMLInputElement>) => {
     setEmail(evt.target.value);
@@ -36,10 +33,14 @@ function LoginForm(): JSX.Element {
       return;
     }
 
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
     dispatch(loginAction({ login: email, password }))
       .unwrap()
-      .catch((error) => {
-        setErrorMessage(typeof error === 'string' ? error : 'Failed to login');
+      .catch((error: string) => {
+        setErrorMessage(error || 'Failed to login');
+        setIsSubmitting(false);
       });
   }, [dispatch, email, password]);
 

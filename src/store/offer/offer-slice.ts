@@ -1,7 +1,8 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Offer } from '../types/offer';
-import { Review } from '../types/review';
-import { fetchOfferAction, fetchReviewsAction, fetchNearbyAction, postCommentAction } from './api-actions';
+import { createSlice } from '@reduxjs/toolkit';
+import { NameSpace } from '../../const';
+import { Offer } from '../../types/offer';
+import { Review } from '../../types/review';
+import { fetchNearbyAction, fetchOfferAction, fetchReviewsAction, postCommentAction } from './offer-thunks';
 
 export type RequestStatus = 'idle' | 'loading' | 'success' | 'error' | 'notFound';
 
@@ -9,41 +10,41 @@ interface OfferState {
   offer: Offer | null;
   reviews: Review[];
   nearbyOffers: Offer[];
-  error: string | null;
   offerStatus: RequestStatus;
   reviewsStatus: RequestStatus;
   nearbyStatus: RequestStatus;
   sendingStatus: RequestStatus;
+  sendingError: string | null;
 }
 
 const initialState: OfferState = {
   offer: null,
   reviews: [],
   nearbyOffers: [],
-  error: null,
   offerStatus: 'idle',
   reviewsStatus: 'idle',
   nearbyStatus: 'idle',
   sendingStatus: 'idle',
+  sendingError: null,
 };
 
 export const offerSlice = createSlice({
-  name: 'offer',
+  name: NameSpace.Offer,
   initialState,
   reducers: {
     dropOffer: (state) => {
       state.offer = null;
       state.reviews = [];
       state.nearbyOffers = [];
-      state.error = null;
       state.offerStatus = 'idle';
       state.reviewsStatus = 'idle';
       state.nearbyStatus = 'idle';
       state.sendingStatus = 'idle';
+      state.sendingError = null;
     },
-    resetSendingStatus: (state) => {
+    dropSendingStatus: (state) => {
       state.sendingStatus = 'idle';
-      state.error = null;
+      state.sendingError = null;
     },
   },
   extraReducers(builder) {
@@ -51,21 +52,17 @@ export const offerSlice = createSlice({
       .addCase(fetchOfferAction.pending, (state) => {
         state.offerStatus = 'loading';
       })
-      .addCase(fetchOfferAction.fulfilled, (state, action: PayloadAction<Offer>) => {
+      .addCase(fetchOfferAction.fulfilled, (state, action) => {
         state.offerStatus = 'success';
         state.offer = action.payload;
       })
       .addCase(fetchOfferAction.rejected, (state, action) => {
-        if (action.payload === 'NOT_FOUND') {
-          state.offerStatus = 'notFound';
-        } else {
-          state.offerStatus = 'error';
-        }
+        state.offerStatus = action.payload === 'NOT_FOUND' ? 'notFound' : 'error';
       })
       .addCase(fetchReviewsAction.pending, (state) => {
         state.reviewsStatus = 'loading';
       })
-      .addCase(fetchReviewsAction.fulfilled, (state, action: PayloadAction<Review[]>) => {
+      .addCase(fetchReviewsAction.fulfilled, (state, action) => {
         state.reviewsStatus = 'success';
         state.reviews = action.payload;
       })
@@ -75,7 +72,7 @@ export const offerSlice = createSlice({
       .addCase(fetchNearbyAction.pending, (state) => {
         state.nearbyStatus = 'loading';
       })
-      .addCase(fetchNearbyAction.fulfilled, (state, action: PayloadAction<Offer[]>) => {
+      .addCase(fetchNearbyAction.fulfilled, (state, action) => {
         state.nearbyStatus = 'success';
         state.nearbyOffers = action.payload;
       })
@@ -84,18 +81,18 @@ export const offerSlice = createSlice({
       })
       .addCase(postCommentAction.pending, (state) => {
         state.sendingStatus = 'loading';
-        state.error = null;
+        state.sendingError = null;
       })
-      .addCase(postCommentAction.fulfilled, (state, action: PayloadAction<Review>) => {
+      .addCase(postCommentAction.fulfilled, (state, action) => {
         state.sendingStatus = 'success';
         state.reviews.push(action.payload);
-        state.error = null;
+        state.sendingError = null;
       })
       .addCase(postCommentAction.rejected, (state, action) => {
         state.sendingStatus = 'error';
-        state.error = action.payload as string;
+        state.sendingError = action.payload || 'Failed to post comment.';
       });
   },
 });
 
-export const { dropOffer, resetSendingStatus } = offerSlice.actions;
+export const { dropOffer, dropSendingStatus } = offerSlice.actions;

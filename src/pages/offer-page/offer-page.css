@@ -16,6 +16,10 @@
   text-align: center;
 }
 
+.offer__no-data-button {
+  margin-top: 20px;
+}
+
 .reviews__error,
 .near-places__error {
   display: flex;

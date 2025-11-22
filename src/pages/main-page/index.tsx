@@ -5,16 +5,15 @@ import CitiesList from '../../components/cities-list';
 import SortOptions from '../../components/sort-options';
 import Spinner from '../../components/spinner';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { setCity } from '../../store/offers-slice';
-import { fetchOffersAction } from '../../store/api-actions';
+import { setCity } from '../../store/offers/offers-slice';
+import { fetchOffersAction } from '../../store/offers/offers-thunks';
 import {
   selectCity,
   selectCityOffers,
   selectSortedOffers,
   selectIsOffersDataLoading,
-  selectError,
-  selectErrorMessage
-} from '../../store/offers-selectors';
+  selectError
+} from '../../store/offers/offers-selectors';
 import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
 import './main-page.css';
 
@@ -26,7 +25,6 @@ function MainPage(): JSX.Element {
   const currentCity = useAppSelector(selectCity);
   const isOffersDataLoading = useAppSelector(selectIsOffersDataLoading);
   const error = useAppSelector(selectError);
-  const errorMessage = useAppSelector(selectErrorMessage);
   const cityOffers = useAppSelector(selectCityOffers);
 
   const [currentSort, setCurrentSort] = useState<SortOption>(SortOptionsEnum.POPULAR);
@@ -87,7 +85,7 @@ function MainPage(): JSX.Element {
                 {error ? (
                   <>
                     <b className="cities__status">Could not load offers</b>
-                    <p className="cities__status-description">{errorMessage}</p>
+                    <p className="cities__status-description">{error}</p>
                     <button
                       onClick={() => window.location.reload()}
                       className="form__submit button cities__status-button"
@@ -124,7 +122,7 @@ function MainPage(): JSX.Element {
           )}
 
           <div className="cities__right-section">
-            {!isMainEmpty && (
+            {!isMainEmpty && cityOffers.length > 0 && (
               <Map
                 city={cityOffers[0].city}
                 points={cityOffers}

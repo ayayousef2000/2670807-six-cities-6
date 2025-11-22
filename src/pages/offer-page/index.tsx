@@ -1,18 +1,18 @@
 import { useEffect, useCallback, memo } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { AppDispatch, RootState } from '../../store';
-import { fetchOfferAction, fetchReviewsAction, fetchNearbyAction } from '../../store/api-actions';
-import { dropOffer } from '../../store/offer-slice';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { fetchOfferAction, fetchReviewsAction, fetchNearbyAction } from '../../store/offer/offer-thunks';
+import { dropOffer } from '../../store/offer/offer-slice';
 import {
   selectOffer,
   selectOfferStatus,
   selectSortedReviews,
-  selectReviewsStatus,
   selectNearbyOffersToRender,
-  selectNearbyStatus,
-  selectOfferPageMapPoints
-} from '../../store/offer-selectors';
+  selectOfferPageMapPoints,
+  selectReviewsStatus,
+  selectNearbyStatus
+} from '../../store/offer/offer-selectors';
+import { selectAuthorizationStatus } from '../../store/user/user-selectors';
 import { AuthorizationStatus } from '../../const';
 import CommentForm from '../../components/comment-form';
 import Map from '../../components/map';
@@ -81,17 +81,17 @@ const OfferListMemo = memo(OfferList);
 
 function OfferPage(): JSX.Element {
   const { id } = useParams();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
-  const offer = useSelector(selectOffer);
-  const offerStatus = useSelector(selectOfferStatus);
-  const reviews = useSelector(selectSortedReviews);
-  const reviewsStatus = useSelector(selectReviewsStatus);
-  const nearbyOffers = useSelector(selectNearbyOffersToRender);
-  const nearbyStatus = useSelector(selectNearbyStatus);
-  const mapPoints = useSelector(selectOfferPageMapPoints);
+  const offer = useAppSelector(selectOffer);
+  const offerStatus = useAppSelector(selectOfferStatus);
+  const reviews = useAppSelector(selectSortedReviews);
+  const reviewsStatus = useAppSelector(selectReviewsStatus);
+  const nearbyOffers = useAppSelector(selectNearbyOffersToRender);
+  const nearbyStatus = useAppSelector(selectNearbyStatus);
+  const mapPoints = useAppSelector(selectOfferPageMapPoints);
+  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
 
-  const authorizationStatus = useSelector((state: RootState) => state.user.authorizationStatus);
   const isAuthorized = authorizationStatus === AuthorizationStatus.Auth;
 
   const loadData = useCallback(() => {
@@ -146,10 +146,10 @@ function OfferPage(): JSX.Element {
             <section className="offer__no-data">
               <b className="cities__status">Failed to load data</b>
               <p className="cities__status-description">
-                  Please check your internet connection or try again later.
+                Please check your internet connection or try again later.
               </p>
-              <button className="button form__submit" style={{marginTop: '20px'}} onClick={loadData}>
-                  Try Again
+              <button className="button form__submit offer__no-data-button" onClick={loadData}>
+                Try Again
               </button>
             </section>
           </div>
@@ -205,10 +205,6 @@ function OfferPage(): JSX.Element {
               <OfferHost host={host} description={description} />
 
               <section className="offer__reviews reviews">
-                {reviewsStatus === 'error' && (
-                  <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">{reviews.length}</span></h2>
-                )}
-
                 {reviewsStatus === 'error' ? (
                   <div className="reviews__error">
                     <p className="reviews__error-text">Failed to load reviews.</p>
@@ -217,7 +213,10 @@ function OfferPage(): JSX.Element {
                     </button>
                   </div>
                 ) : (
-                  <ReviewsListMemo reviews={reviews} />
+                  <>
+                    <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">{reviews.length}</span></h2>
+                    <ReviewsListMemo reviews={reviews} />
+                  </>
                 )}
 
                 {isAuthorized && <CommentForm />}

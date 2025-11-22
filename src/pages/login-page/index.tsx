@@ -2,9 +2,11 @@ import { Link, Navigate } from 'react-router-dom';
 import { useState, useCallback, memo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { AuthorizationStatus, CITIES } from '../../const';
-import { setCity } from '../../store/offers-slice';
+import { setCity } from '../../store/offers/offers-slice';
+import { selectAuthorizationStatus } from '../../store/user/user-selectors';
 import { AppRoute } from '../../app/routes';
 import LoginForm from '../../components/login-form';
+import './login-page.css';
 
 const LoginHeader = memo(() => (
   <header className="header">
@@ -43,7 +45,7 @@ CityLocationItem.displayName = 'CityLocationItem';
 
 function LoginPage(): JSX.Element {
   const dispatch = useAppDispatch();
-  const authorizationStatus = useAppSelector((state) => state.user.authorizationStatus);
+  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
   const [randomCity] = useState(() => CITIES[Math.floor(Math.random() * CITIES.length)]);
 
   const handleCityLinkClick = useCallback(() => {

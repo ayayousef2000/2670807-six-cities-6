@@ -1,7 +1,8 @@
 import { Navigate } from 'react-router-dom';
 import { AppRoute } from '../../app/routes';
-import { useAppSelector } from '../../hooks';
 import { AuthorizationStatus } from '../../const';
+import { useAppSelector } from '../../hooks';
+import { selectAuthorizationStatus } from '../../store/user/user-selectors';
 import Spinner from '../spinner';
 
 type PrivateRouteProps = {
@@ -9,7 +10,7 @@ type PrivateRouteProps = {
 };
 
 export function PrivateRoute({ children }: PrivateRouteProps): JSX.Element {
-  const authorizationStatus = useAppSelector((state) => state.user.authorizationStatus);
+  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
 
   if (authorizationStatus === AuthorizationStatus.Unknown) {
     return <Spinner />;

@@ -1,17 +1,16 @@
 import { useState, ChangeEvent, FormEvent, useEffect, useCallback, memo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { AppDispatch } from '../../store';
-import { postCommentAction } from '../../store/api-actions';
-import { resetSendingStatus } from '../../store/offer-slice';
-import { selectSendingStatus, selectError } from '../../store/offer-selectors';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { postCommentAction } from '../../store/offer/offer-thunks';
+import { dropSendingStatus } from '../../store/offer/offer-slice';
+import { selectSendingStatus, selectSendingError } from '../../store/offer/offer-selectors';
 import './comment-form.css';
 
 const MIN_COMMENT_LENGTH = 50;
 const MAX_COMMENT_LENGTH = 300;
 const RATING_STARS = [5, 4, 3, 2, 1];
 
-const RATING_MAP = {
+const RATING_MAP: Record<number, string> = {
   5: 'perfect',
   4: 'good',
   3: 'not bad',
@@ -19,17 +18,14 @@ const RATING_MAP = {
   1: 'terribly'
 };
 
-const StarInput = memo(({
-  star,
-  checked,
-  disabled,
-  onChange
-}: {
+interface StarInputProps {
   star: number;
   checked: boolean;
   disabled: boolean;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-}) => (
+}
+
+const StarInput = memo(({ star, checked, disabled, onChange }: StarInputProps) => (
   <>
     <input
       className="form__rating-input visually-hidden"
@@ -44,7 +40,7 @@ const StarInput = memo(({
     <label
       htmlFor={`${star}-stars`}
       className="reviews__rating-label form__rating-label"
-      title={RATING_MAP[star as keyof typeof RATING_MAP]}
+      title={RATING_MAP[star]}
     >
       <svg className="form__star-image" width="37" height="33">
         <use xlinkHref="#icon-star"></use>
@@ -56,11 +52,11 @@ const StarInput = memo(({
 StarInput.displayName = 'StarInput';
 
 function CommentFormComponent(): JSX.Element {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const { id } = useParams();
 
-  const sendingStatus = useSelector(selectSendingStatus);
-  const serverError = useSelector(selectError);
+  const sendingStatus = useAppSelector(selectSendingStatus);
+  const sendingError = useAppSelector(selectSendingError);
 
   const [formData, setFormData] = useState({
     rating: 0,
@@ -74,15 +70,9 @@ function CommentFormComponent(): JSX.Element {
   useEffect(() => {
     if (isSuccess) {
       setFormData({ rating: 0, review: '' });
-      dispatch(resetSendingStatus());
+      dispatch(dropSendingStatus());
     }
   }, [isSuccess, dispatch]);
-
-  useEffect(() => {
-    if (isError) {
-      dispatch(resetSendingStatus());
-    }
-  }, [formData, isError, dispatch]);
 
   const handleFieldChange = useCallback((evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = evt.target;
@@ -90,7 +80,11 @@ function CommentFormComponent(): JSX.Element {
       ...prev,
       [name]: name === 'rating' ? Number(value) : value
     }));
-  }, []);
+
+    if (isError) {
+      dispatch(dropSendingStatus());
+    }
+  }, [isError, dispatch]);
 
   const handleSubmit = useCallback((evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
@@ -139,9 +133,9 @@ function CommentFormComponent(): JSX.Element {
         maxLength={MAX_COMMENT_LENGTH}
       />
 
-      {isError && serverError && (
-        <div className="reviews__error">
-          {serverError}
+      {isError && sendingError && (
+        <div className="reviews__error" style={{ color: 'red', marginBottom: '10px' }}>
+          {sendingError}
         </div>
       )}
 
