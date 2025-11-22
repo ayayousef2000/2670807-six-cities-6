@@ -1,15 +1,17 @@
-import { useState, ChangeEvent, FormEvent, useEffect, Fragment } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect, useCallback, memo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { AppDispatch, RootState } from '../../store';
+import { AppDispatch } from '../../store';
 import { postCommentAction } from '../../store/api-actions';
 import { resetSendingStatus } from '../../store/offer-slice';
+import { selectSendingStatus, selectError } from '../../store/offer-selectors';
 import './comment-form.css';
 
 const MIN_COMMENT_LENGTH = 50;
 const MAX_COMMENT_LENGTH = 300;
+const RATING_STARS = [5, 4, 3, 2, 1];
 
-const ratingMap = {
+const RATING_MAP = {
   5: 'perfect',
   4: 'good',
   3: 'not bad',
@@ -17,11 +19,48 @@ const ratingMap = {
   1: 'terribly'
 };
 
-function CommentForm(): JSX.Element {
+const StarInput = memo(({
+  star,
+  checked,
+  disabled,
+  onChange
+}: {
+  star: number;
+  checked: boolean;
+  disabled: boolean;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+}) => (
+  <>
+    <input
+      className="form__rating-input visually-hidden"
+      name="rating"
+      value={star}
+      id={`${star}-stars`}
+      type="radio"
+      checked={checked}
+      onChange={onChange}
+      disabled={disabled}
+    />
+    <label
+      htmlFor={`${star}-stars`}
+      className="reviews__rating-label form__rating-label"
+      title={RATING_MAP[star as keyof typeof RATING_MAP]}
+    >
+      <svg className="form__star-image" width="37" height="33">
+        <use xlinkHref="#icon-star"></use>
+      </svg>
+    </label>
+  </>
+));
+
+StarInput.displayName = 'StarInput';
+
+function CommentFormComponent(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
   const { id } = useParams();
-  const sendingStatus = useSelector((state: RootState) => state.offer.sendingStatus);
-  const serverError = useSelector((state: RootState) => state.offer.error);
+
+  const sendingStatus = useSelector(selectSendingStatus);
+  const serverError = useSelector(selectError);
 
   const [formData, setFormData] = useState({
     rating: 0,
@@ -32,11 +71,6 @@ function CommentForm(): JSX.Element {
   const isSuccess = sendingStatus === 'success';
   const isError = sendingStatus === 'error';
 
-  const isValid =
-    formData.rating > 0 &&
-    formData.review.length >= MIN_COMMENT_LENGTH &&
-    formData.review.length <= MAX_COMMENT_LENGTH;
-
   useEffect(() => {
     if (isSuccess) {
       setFormData({ rating: 0, review: '' });
@@ -44,17 +78,27 @@ function CommentForm(): JSX.Element {
     }
   }, [isSuccess, dispatch]);
 
-  const handleFieldChange = (evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = evt.target;
-    setFormData({ ...formData, [name]: name === 'rating' ? Number(value) : value });
-
+  useEffect(() => {
     if (isError) {
       dispatch(resetSendingStatus());
     }
-  };
+  }, [formData, isError, dispatch]);
 
-  const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
+  const handleFieldChange = useCallback((evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = evt.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'rating' ? Number(value) : value
+    }));
+  }, []);
+
+  const handleSubmit = useCallback((evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
+
+    const isValid =
+      formData.rating > 0 &&
+      formData.review.length >= MIN_COMMENT_LENGTH &&
+      formData.review.length <= MAX_COMMENT_LENGTH;
 
     if (id && isValid) {
       dispatch(postCommentAction({
@@ -63,34 +107,25 @@ function CommentForm(): JSX.Element {
         rating: formData.rating
       }));
     }
-  };
+  }, [dispatch, id, formData]);
+
+  const isValid =
+    formData.rating > 0 &&
+    formData.review.length >= MIN_COMMENT_LENGTH &&
+    formData.review.length <= MAX_COMMENT_LENGTH;
 
   return (
     <form className="reviews__form form" action="#" method="post" onSubmit={handleSubmit}>
       <label className="reviews__label form__label" htmlFor="review">Your review</label>
       <div className="reviews__rating-form form__rating">
-        {[5, 4, 3, 2, 1].map((star) => (
-          <Fragment key={star}>
-            <input
-              className="form__rating-input visually-hidden"
-              name="rating"
-              value={star}
-              id={`${star}-stars`}
-              type="radio"
-              checked={formData.rating === star}
-              onChange={handleFieldChange}
-              disabled={isSubmitting}
-            />
-            <label
-              htmlFor={`${star}-stars`}
-              className="reviews__rating-label form__rating-label"
-              title={ratingMap[star as keyof typeof ratingMap]}
-            >
-              <svg className="form__star-image" width="37" height="33">
-                <use xlinkHref="#icon-star"></use>
-              </svg>
-            </label>
-          </Fragment>
+        {RATING_STARS.map((star) => (
+          <StarInput
+            key={star}
+            star={star}
+            checked={formData.rating === star}
+            disabled={isSubmitting}
+            onChange={handleFieldChange}
+          />
         ))}
       </div>
       <textarea
@@ -125,5 +160,7 @@ function CommentForm(): JSX.Element {
     </form>
   );
 }
+
+const CommentForm = memo(CommentFormComponent);
 
 export default CommentForm;

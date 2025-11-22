@@ -44,11 +44,11 @@ function MapComponent({ city, points, selectedPoint, className = 'map', style }:
 
   useEffect(() => {
     if (map) {
-      if (markerLayer.current) {
+      if (!markerLayer.current) {
+        markerLayer.current = layerGroup().addTo(map);
+      } else {
         markerLayer.current.clearLayers();
       }
-
-      markerLayer.current = layerGroup().addTo(map);
 
       points.forEach((point) => {
         const marker = new Marker({
@@ -56,40 +56,18 @@ function MapComponent({ city, points, selectedPoint, className = 'map', style }:
           lng: point.location.longitude
         });
 
-        marker.setIcon(defaultCustomIcon);
+        const isSelected = selectedPoint && point.id === selectedPoint.id;
+
+        marker.setIcon(isSelected ? currentCustomIcon : defaultCustomIcon);
+
+        if (isSelected) {
+          marker.setZIndexOffset(1000);
+        }
+
         marker.addTo(markerLayer.current as LayerGroup);
       });
-
-      return () => {
-        if (map && markerLayer.current) {
-          map.removeLayer(markerLayer.current);
-        }
-      };
     }
-  }, [map, points]);
-
-  useEffect(() => {
-    if (markerLayer.current) {
-      markerLayer.current.eachLayer((layer) => {
-        const marker = layer as Marker;
-        const markerLatLng = marker.getLatLng();
-
-        const point = points.find(
-          (p) =>
-            p.location.latitude === markerLatLng.lat &&
-            p.location.longitude === markerLatLng.lng
-        );
-
-        if (selectedPoint && point && point.id === selectedPoint.id) {
-          marker.setIcon(currentCustomIcon);
-          marker.setZIndexOffset(1000);
-        } else {
-          marker.setIcon(defaultCustomIcon);
-          marker.setZIndexOffset(0);
-        }
-      });
-    }
-  }, [selectedPoint, points]);
+  }, [map, points, selectedPoint]);
 
   return (
     <section
@@ -104,10 +82,10 @@ function mapPropsAreEqual(prev: MapProps, next: MapProps) {
   return (
     prev.city.name === next.city.name &&
     prev.selectedPoint?.id === next.selectedPoint?.id &&
-    prev.points.length === next.points.length &&
-    prev.points[0]?.id === next.points[0]?.id
+    prev.points.length === next.points.length
   );
 }
 
 const Map = memo(MapComponent, mapPropsAreEqual);
+
 export default Map;

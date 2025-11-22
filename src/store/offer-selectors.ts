@@ -15,6 +15,7 @@ export const selectNearbyOffers = (state: RootState) => state.offer.nearbyOffers
 export const selectNearbyStatus = (state: RootState) => state.offer.nearbyStatus;
 
 export const selectSendingStatus = (state: RootState) => state.offer.sendingStatus;
+export const selectError = (state: RootState) => state.offer.error;
 
 export const selectSortedReviews = createSelector(
   [selectReviews],
@@ -34,7 +35,13 @@ export const selectOfferPageMapPoints = createSelector(
     if (!currentOffer) {
       return nearbyOffers;
     }
-    const uniqueNearby = nearbyOffers.filter((offer) => offer.id !== currentOffer.id);
-    return [...uniqueNearby, currentOffer];
+
+    const isOfferInNearby = nearbyOffers.some((o) => o.id === currentOffer.id);
+
+    if (isOfferInNearby) {
+      return nearbyOffers;
+    }
+
+    return [...nearbyOffers, currentOffer];
   }
 );
