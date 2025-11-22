@@ -16,64 +16,39 @@
   text-align: center;
 }
 
-.reviews__error {
+.reviews__error,
+.near-places__error {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 20px;
   text-align: center;
-  border-radius: 8px;
+  width: 100%;
   margin-bottom: 20px;
 }
 
-.reviews__error-text {
+.reviews__error-text,
+.near-places__error-text {
+  color: #ff5e5e;
   font-size: 16px;
-  margin-bottom: 10px;
-  color: #ff5a5f;
+  font-weight: 500;
+  margin-bottom: 15px;
 }
 
-.reviews__retry-button {
-  background: #4481c3;
+.reviews__retry-button,
+.near-places__retry-button {
+  padding: 10px 20px;
+  background-color: #4481c3;
   color: white;
   border: none;
-  padding: 5px 15px;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.2s;
 }
 
-.reviews__retry-button:hover {
-  background: #2a66a8;
-}
-
-.near-places__error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  text-align: center;
-  border-radius: 8px;
-  margin-top: 20px;
-}
-
-.near-places__error-text {
-  font-size: 18px;
-  margin-bottom: 15px;
-  color: #ff5a5f;
-}
-
-.near-places__retry-button {
-  background: #4481c3;
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
+.reviews__retry-button:hover,
 .near-places__retry-button:hover {
-  background: #2a66a8;
+  background-color: #2a66a8;
 }

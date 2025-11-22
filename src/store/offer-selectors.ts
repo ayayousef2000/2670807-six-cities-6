@@ -26,22 +26,23 @@ export const selectSortedReviews = createSelector(
 
 export const selectNearbyOffersToRender = createSelector(
   [selectNearbyOffers],
-  (nearbyOffers) => nearbyOffers.slice(0, MAX_NEARBY_OFFERS)
+  (nearbyOffers) => (nearbyOffers || []).slice(0, MAX_NEARBY_OFFERS)
 );
 
 export const selectOfferPageMapPoints = createSelector(
   [selectOffer, selectNearbyOffersToRender],
   (currentOffer, nearbyOffers): Offer[] => {
     if (!currentOffer) {
-      return nearbyOffers;
+      return nearbyOffers || [];
     }
 
-    const isOfferInNearby = nearbyOffers.some((o) => o.id === currentOffer.id);
+    const safeNearbyOffers = nearbyOffers || [];
+    const isOfferInNearby = safeNearbyOffers.some((o) => o.id === currentOffer.id);
 
     if (isOfferInNearby) {
-      return nearbyOffers;
+      return safeNearbyOffers;
     }
 
-    return [...nearbyOffers, currentOffer];
+    return [...safeNearbyOffers, currentOffer];
   }
 );

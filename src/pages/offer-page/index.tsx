@@ -102,6 +102,18 @@ function OfferPage(): JSX.Element {
     }
   }, [id, dispatch]);
 
+  const handleRetryReviews = useCallback(() => {
+    if (id) {
+      dispatch(fetchReviewsAction(id));
+    }
+  }, [id, dispatch]);
+
+  const handleRetryNearby = useCallback(() => {
+    if (id) {
+      dispatch(fetchNearbyAction(id));
+    }
+  }, [id, dispatch]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     loadData();
@@ -193,9 +205,17 @@ function OfferPage(): JSX.Element {
               <OfferHost host={host} description={description} />
 
               <section className="offer__reviews reviews">
+                {reviewsStatus === 'error' && (
+                  <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">{reviews.length}</span></h2>
+                )}
 
                 {reviewsStatus === 'error' ? (
-                  <div className="reviews__error">Failed to load reviews</div>
+                  <div className="reviews__error">
+                    <p className="reviews__error-text">Failed to load reviews.</p>
+                    <button className="reviews__retry-button" onClick={handleRetryReviews}>
+                      Try again
+                    </button>
+                  </div>
                 ) : (
                   <ReviewsListMemo reviews={reviews} />
                 )}
@@ -217,7 +237,12 @@ function OfferPage(): JSX.Element {
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
             {nearbyStatus === 'error' ? (
-              <div className="near-places__error">Failed to load nearby places</div>
+              <div className="near-places__error">
+                <p className="near-places__error-text">Failed to load nearby places.</p>
+                <button className="near-places__retry-button" onClick={handleRetryNearby}>
+                  Try again
+                </button>
+              </div>
             ) : (
               <OfferListMemo offers={nearbyOffers} variant="near-places" />
             )}
