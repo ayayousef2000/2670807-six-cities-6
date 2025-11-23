@@ -1,14 +1,25 @@
 import { useAppSelector } from '../../hooks';
-import { selectOffers } from '../../store/offers/offers-selectors';
-import { useFavorites } from '../../hooks/use-favorites';
+import {
+  getFavorites,
+  getFavoritesLoadingStatus,
+  selectFavoritesByCity
+} from '../../store/favorites/favorites-selectors';
 import FavoritesList from './favorites-list';
 import FavoritesEmpty from './favorites-empty';
 import Footer from '../../components/footer';
+import Spinner from '../../components/spinner';
 
 function FavoritesPage(): JSX.Element {
-  const offers = useAppSelector(selectOffers);
-  const { favoritesByCity, favoriteOffers } = useFavorites(offers);
-  const hasFavorites = favoriteOffers.length > 0;
+
+  const favorites = useAppSelector(getFavorites);
+  const favoritesByCity = useAppSelector(selectFavoritesByCity);
+  const isFavoritesLoading = useAppSelector(getFavoritesLoadingStatus);
+
+  if (isFavoritesLoading) {
+    return <Spinner />;
+  }
+
+  const hasFavorites = favorites.length > 0;
 
   return (
     <>

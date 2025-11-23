@@ -18,6 +18,12 @@ type OfferCardProps = {
   onMouseLeave?: () => void;
 };
 
+const cardSizeMap: Record<CardVariant, { width: string; height: string }> = {
+  cities: { width: '260', height: '200' },
+  'near-places': { width: '260', height: '200' },
+  favorites: { width: '150', height: '110' },
+};
+
 function OfferCardComponent({
   offer,
   variant = 'cities',
@@ -48,6 +54,7 @@ function OfferCardComponent({
 
   const ratingWidth = getRatingWidth(rating);
   const offerLink = AppRoute.Offer.replace(':id', id);
+  const { width, height } = cardSizeMap[variant];
 
   const handleMouseEnter = () => {
     onMouseEnter?.(id);
@@ -100,15 +107,15 @@ function OfferCardComponent({
           <img
             className="place-card__image"
             src={previewImage}
-            width="260"
-            height="200"
+            width={width}
+            height={height}
             alt={title}
             loading={priority ? 'eager' : 'lazy'}
             decoding="async"
           />
         </Link>
       </div>
-      <div className="place-card__info">
+      <div className={`${variant}__card-info place-card__info`}>
         <div className="place-card__price-wrapper">
           <div className="place-card__price">
             <b className="place-card__price-value">&euro;{price}</b>

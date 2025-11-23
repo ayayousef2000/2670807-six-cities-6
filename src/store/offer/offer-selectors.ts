@@ -1,22 +1,22 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { NameSpace } from '../../const';
-import { RootState } from '../index';
+import { State } from '../../types/state';
 import { Offer } from '../../types/offer';
 
 const MAX_NEARBY_OFFERS = 3;
 const MAX_REVIEWS = 10;
 
-export const selectOffer = (state: RootState) => state[NameSpace.Offer].offer;
-export const selectOfferStatus = (state: RootState) => state[NameSpace.Offer].offerStatus;
+export const selectOffer = (state: State) => state[NameSpace.Offer].offer;
+export const selectOfferStatus = (state: State) => state[NameSpace.Offer].offerStatus;
 
-export const selectReviews = (state: RootState) => state[NameSpace.Offer].reviews;
-export const selectReviewsStatus = (state: RootState) => state[NameSpace.Offer].reviewsStatus;
+export const selectReviews = (state: State) => state[NameSpace.Offer].reviews;
+export const selectReviewsStatus = (state: State) => state[NameSpace.Offer].reviewsStatus;
 
-export const selectNearbyOffers = (state: RootState) => state[NameSpace.Offer].nearbyOffers;
-export const selectNearbyStatus = (state: RootState) => state[NameSpace.Offer].nearbyStatus;
+export const selectNearbyOffers = (state: State) => state[NameSpace.Offer].nearbyOffers;
+export const selectNearbyStatus = (state: State) => state[NameSpace.Offer].nearbyStatus;
 
-export const selectSendingStatus = (state: RootState) => state[NameSpace.Offer].sendingStatus;
-export const selectSendingError = (state: RootState) => state[NameSpace.Offer].sendingError;
+export const selectSendingStatus = (state: State) => state[NameSpace.Offer].sendingStatus;
+export const selectSendingError = (state: State) => state[NameSpace.Offer].sendingError;
 
 export const selectSortedReviews = createSelector(
   [selectReviews],

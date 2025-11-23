@@ -1,13 +1,13 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { NameSpace, SortOptions } from '../../const';
-import { RootState } from '../index';
+import { State } from '../../types/state';
 
 type SortOption = typeof SortOptions[keyof typeof SortOptions];
 
-export const selectCity = (state: RootState) => state[NameSpace.Offers].city;
-export const selectOffers = (state: RootState) => state[NameSpace.Offers].offers;
-export const selectIsOffersDataLoading = (state: RootState) => state[NameSpace.Offers].isOffersDataLoading;
-export const selectError = (state: RootState) => state[NameSpace.Offers].error;
+export const selectCity = (state: State) => state[NameSpace.Offers].city;
+export const selectOffers = (state: State) => state[NameSpace.Offers].offers;
+export const selectIsOffersDataLoading = (state: State) => state[NameSpace.Offers].isOffersDataLoading;
+export const selectError = (state: State) => state[NameSpace.Offers].error;
 
 export const selectCityOffers = createSelector(
   [selectOffers, selectCity],
@@ -15,7 +15,7 @@ export const selectCityOffers = createSelector(
 );
 
 export const selectSortedOffers = createSelector(
-  [selectCityOffers, (_state: RootState, sortType: SortOption) => sortType],
+  [selectCityOffers, (_state: State, sortType: SortOption) => sortType],
   (cityOffers, sortType) => {
     switch (sortType) {
       case SortOptions.PRICE_LOW_TO_HIGH:
