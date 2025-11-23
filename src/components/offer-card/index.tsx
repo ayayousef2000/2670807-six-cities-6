@@ -8,11 +8,18 @@ type CardVariant = 'cities' | 'near-places' | 'favorites';
 type OfferCardProps = {
   offer: Offer;
   variant?: CardVariant;
+  priority?: boolean;
   onMouseEnter?: (offerId: string) => void;
   onMouseLeave?: () => void;
 };
 
-function OfferCardComponent({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: OfferCardProps): JSX.Element {
+function OfferCardComponent({
+  offer,
+  variant = 'cities',
+  priority = false,
+  onMouseEnter,
+  onMouseLeave
+}: OfferCardProps): JSX.Element {
   const {
     id,
     isPremium,
@@ -53,7 +60,7 @@ function OfferCardComponent({ offer, variant = 'cities', onMouseEnter, onMouseLe
             width="260"
             height="200"
             alt={title}
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
             decoding="async"
           />
         </Link>

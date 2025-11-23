@@ -11,7 +11,12 @@ type OfferListProps = {
   onCardMouseLeave?: () => void;
 };
 
-function OfferListComponent({ offers, variant = 'cities', onCardMouseEnter, onCardMouseLeave }: OfferListProps): JSX.Element {
+function OfferListComponent({
+  offers,
+  variant = 'cities',
+  onCardMouseEnter,
+  onCardMouseLeave
+}: OfferListProps): JSX.Element {
   const listClassName =
     variant === 'cities'
       ? 'cities__places-list places__list tabs__content'
@@ -19,11 +24,12 @@ function OfferListComponent({ offers, variant = 'cities', onCardMouseEnter, onCa
 
   return (
     <div className={listClassName}>
-      {offers.map((offer) => (
+      {offers.map((offer, index) => (
         <OfferCard
           key={offer.id}
           offer={offer}
           variant={variant}
+          priority={index < 20}
           onMouseEnter={onCardMouseEnter}
           onMouseLeave={onCardMouseLeave}
         />
