@@ -4,6 +4,7 @@ import Map from '../../components/map';
 import CitiesList from '../../components/cities-list';
 import SortOptions from '../../components/sort-options';
 import Spinner from '../../components/spinner';
+import MainEmpty from '../../components/main-empty';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { setCity } from '../../store/offers/offers-slice';
 import { fetchOffersAction } from '../../store/offers/offers-thunks';
@@ -57,12 +58,52 @@ function MainPage(): JSX.Element {
 
   const offersCount = cityOffers.length;
   const hasOffers = offersCount > 0;
-  const isMainEmpty = !hasOffers || !!error;
-  const selectedPoint = cityOffers.find((offer) => offer.id === activeOfferId);
+  const isMainEmpty = !hasOffers;
 
   if (isOffersDataLoading && !hasOffers) {
     return <Spinner />;
   }
+
+  const renderContent = () => {
+    if (error) {
+      return (
+        <section className="cities__no-places">
+          <div className="cities__status-wrapper tabs__content">
+            <b className="cities__status">Could not load offers</b>
+            <p className="cities__status-description">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="form__submit button cities__status-button"
+            >
+              Try Again
+            </button>
+          </div>
+        </section>
+      );
+    }
+
+    if (isMainEmpty) {
+      return <MainEmpty city={currentCity} />;
+    }
+
+    return (
+      <section className="cities__places places">
+        <h2 className="visually-hidden">Places</h2>
+        <b className="places__found">{offersCount} places to stay in {currentCity}</b>
+
+        <SortOptions
+          currentSort={currentSort}
+          onSortChange={handleSortChange}
+        />
+
+        <OfferList
+          offers={sortedOffers}
+          onCardMouseEnter={handleCardMouseEnter}
+          onCardMouseLeave={handleCardMouseLeave}
+        />
+      </section>
+    );
+  };
 
   return (
     <main className={`page__main page__main--index ${isMainEmpty ? 'page__main--index-empty' : ''}`}>
@@ -79,54 +120,14 @@ function MainPage(): JSX.Element {
       <div className="cities">
         <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
 
-          {isMainEmpty ? (
-            <section className="cities__no-places">
-              <div className="cities__status-wrapper tabs__content">
-                {error ? (
-                  <>
-                    <b className="cities__status">Could not load offers</b>
-                    <p className="cities__status-description">{error}</p>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="form__submit button cities__status-button"
-                    >
-                      Try Again
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <b className="cities__status">No places to stay available</b>
-                    <p className="cities__status-description">
-                      We could not find any property available at the moment in {currentCity}
-                    </p>
-                  </>
-                )}
-              </div>
-            </section>
-          ) : (
-            <section className="cities__places places">
-              <h2 className="visually-hidden">Places</h2>
-              <b className="places__found">{offersCount} places to stay in {currentCity}</b>
-
-              <SortOptions
-                currentSort={currentSort}
-                onSortChange={handleSortChange}
-              />
-
-              <OfferList
-                offers={sortedOffers}
-                onCardMouseEnter={handleCardMouseEnter}
-                onCardMouseLeave={handleCardMouseLeave}
-              />
-            </section>
-          )}
+          {renderContent()}
 
           <div className="cities__right-section">
-            {!isMainEmpty && cityOffers.length > 0 && (
+            {!isMainEmpty && !error && (
               <Map
                 city={cityOffers[0].city}
                 points={cityOffers}
-                selectedPoint={selectedPoint}
+                selectedPoint={cityOffers.find((offer) => offer.id === activeOfferId)}
                 className="cities__map"
               />
             )}
