@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { CITIES, NameSpace } from '../../const';
 import { Offer } from '../../types/offer';
+import { changeFavoriteStatusAction } from '../offer/offer-thunks';
 import { fetchOffersAction } from './offers-thunks';
 
 interface OffersState {
@@ -41,6 +42,12 @@ export const offersSlice = createSlice({
         }
         state.isOffersDataLoading = false;
         state.error = action.payload || 'Unknown error';
+      })
+      .addCase(changeFavoriteStatusAction.fulfilled, (state, action) => {
+        const offerIndex = state.offers.findIndex((offer) => offer.id === action.payload.id);
+        if (offerIndex !== -1) {
+          state.offers[offerIndex].isFavorite = action.payload.isFavorite;
+        }
       });
   },
 });

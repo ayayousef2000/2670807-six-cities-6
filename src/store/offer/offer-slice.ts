@@ -2,7 +2,13 @@ import { createSlice } from '@reduxjs/toolkit';
 import { NameSpace } from '../../const';
 import { Offer } from '../../types/offer';
 import { Review } from '../../types/review';
-import { fetchNearbyAction, fetchOfferAction, fetchReviewsAction, postCommentAction } from './offer-thunks';
+import {
+  fetchNearbyAction,
+  fetchOfferAction,
+  fetchReviewsAction,
+  postCommentAction,
+  changeFavoriteStatusAction
+} from './offer-thunks';
 
 export type RequestStatus = 'idle' | 'loading' | 'success' | 'error' | 'notFound';
 
@@ -91,6 +97,16 @@ export const offerSlice = createSlice({
       .addCase(postCommentAction.rejected, (state, action) => {
         state.sendingStatus = 'error';
         state.sendingError = action.payload || 'Failed to post comment.';
+      })
+      .addCase(changeFavoriteStatusAction.fulfilled, (state, action) => {
+        if (state.offer && state.offer.id === action.payload.id) {
+          state.offer.isFavorite = action.payload.isFavorite;
+        }
+
+        const foundNearby = state.nearbyOffers.find((offer) => offer.id === action.payload.id);
+        if (foundNearby) {
+          foundNearby.isFavorite = action.payload.isFavorite;
+        }
       });
   },
 });
