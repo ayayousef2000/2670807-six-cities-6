@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import OfferList from '../../components/offer-list';
 import Map from '../../components/map';
 import CitiesList from '../../components/cities-list';
@@ -16,9 +16,24 @@ import {
   selectError
 } from '../../store/offers/offers-selectors';
 import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
+import { Offer } from '../../types/offer';
 import './main-page.css';
 
 type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
+
+const areMapPropsEqual = (prevProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] }, nextProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] }) => {
+  const isCitySame = prevProps.city.name === nextProps.city.name;
+  const isSelectedPointSame = prevProps.selectedPoint?.id === nextProps.selectedPoint?.id;
+
+  const arePointsSame =
+    prevProps.points.length === nextProps.points.length &&
+    prevProps.points[0]?.id === nextProps.points[0]?.id;
+
+  return isCitySame && isSelectedPointSame && arePointsSame;
+};
+
+const MapMemo = memo(Map, areMapPropsEqual);
+const OfferListMemo = memo(OfferList);
 
 function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
@@ -34,10 +49,7 @@ function MainPage(): JSX.Element {
   const sortedOffers = useAppSelector((state) => selectSortedOffers(state, currentSort));
 
   useEffect(() => {
-    const promise = dispatch(fetchOffersAction());
-    return () => {
-      promise.abort();
-    };
+    dispatch(fetchOffersAction());
   }, [dispatch]);
 
   const handleCityChange = useCallback((city: string) => {
@@ -56,12 +68,22 @@ function MainPage(): JSX.Element {
     setActiveOfferId(null);
   }, []);
 
+  const selectedPoint = useMemo(() =>
+    cityOffers.find((offer) => offer.id === activeOfferId),
+  [cityOffers, activeOfferId]);
+
   const offersCount = cityOffers.length;
   const hasOffers = offersCount > 0;
   const isMainEmpty = !hasOffers;
 
-  if (isOffersDataLoading && !hasOffers) {
-    return <Spinner />;
+  if (isOffersDataLoading) {
+    return (
+      <div className="page page--gray page--main">
+        <main className="page__main page__main--index">
+          <Spinner />
+        </main>
+      </div>
+    );
   }
 
   const renderContent = () => {
@@ -96,7 +118,7 @@ function MainPage(): JSX.Element {
           onSortChange={handleSortChange}
         />
 
-        <OfferList
+        <OfferListMemo
           offers={sortedOffers}
           onCardMouseEnter={handleCardMouseEnter}
           onCardMouseLeave={handleCardMouseLeave}
@@ -106,36 +128,38 @@ function MainPage(): JSX.Element {
   };
 
   return (
-    <main className={`page__main page__main--index ${isMainEmpty ? 'page__main--index-empty' : ''}`}>
-      <h1 className="visually-hidden">Cities</h1>
+    <div className="page page--gray page--main">
+      <main className={`page__main page__main--index ${isMainEmpty ? 'page__main--index-empty' : ''}`}>
+        <h1 className="visually-hidden">Cities</h1>
 
-      <div className="tabs">
-        <CitiesList
-          cities={CITIES}
-          currentCity={currentCity}
-          onCityChange={handleCityChange}
-        />
-      </div>
-
-      <div className="cities">
-        <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
-
-          {renderContent()}
-
-          <div className="cities__right-section">
-            {!isMainEmpty && !error && (
-              <Map
-                city={cityOffers[0].city}
-                points={cityOffers}
-                selectedPoint={cityOffers.find((offer) => offer.id === activeOfferId)}
-                className="cities__map"
-              />
-            )}
-          </div>
-
+        <div className="tabs">
+          <CitiesList
+            cities={CITIES}
+            currentCity={currentCity}
+            onCityChange={handleCityChange}
+          />
         </div>
-      </div>
-    </main>
+
+        <div className="cities">
+          <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
+
+            {renderContent()}
+
+            <div className="cities__right-section">
+              {!isMainEmpty && !error && (
+                <MapMemo
+                  city={cityOffers[0].city}
+                  points={cityOffers}
+                  selectedPoint={selectedPoint}
+                  className="cities__map"
+                />
+              )}
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
 

@@ -24,12 +24,11 @@ function OfferListComponent({
 
   return (
     <div className={listClassName}>
-      {offers.map((offer, index) => (
+      {offers.map((offer) => (
         <OfferCard
           key={offer.id}
           offer={offer}
           variant={variant}
-          priority={index < 20}
           onMouseEnter={onCardMouseEnter}
           onMouseLeave={onCardMouseLeave}
         />

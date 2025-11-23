@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { CITIES, NameSpace } from '../../const';
 import { Offer } from '../../types/offer';
-import { changeFavoriteStatusAction } from '../offer/offer-thunks';
+import { changeFavoriteStatusAction } from '../favorites/favorites-thunks';
 import { fetchOffersAction } from './offers-thunks';
 
 interface OffersState {

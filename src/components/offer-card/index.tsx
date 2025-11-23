@@ -1,12 +1,9 @@
-import { memo, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import { Offer } from '../../types/offer';
 import { getRatingWidth } from '../../utils';
-import { useAppDispatch, useAppSelector } from '../../hooks';
-import { changeFavoriteStatusAction } from '../../store/offer/offer-thunks';
-import { selectAuthorizationStatus } from '../../store/user/user-selectors';
-import { AuthorizationStatus } from '../../const';
 import { AppRoute } from '../../app/routes';
+import { useFavoriteAction } from '../../hooks/use-favorites';
 
 type CardVariant = 'cities' | 'near-places' | 'favorites';
 
@@ -31,26 +28,18 @@ function OfferCardComponent({
   onMouseEnter,
   onMouseLeave
 }: OfferCardProps): JSX.Element {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
-
-  const [isFavorite, setIsFavorite] = useState(offer.isFavorite);
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  useEffect(() => {
-    setIsFavorite(offer.isFavorite);
-  }, [offer.isFavorite]);
-
   const {
     id,
     isPremium,
+    isFavorite,
     previewImage,
     price,
     rating,
     title,
     type,
   } = offer;
+
+  const { handleFavoriteClick, isFavoriteSubmitting } = useFavoriteAction(id, isFavorite);
 
   const ratingWidth = getRatingWidth(rating);
   const offerLink = AppRoute.Offer.replace(':id', id);
@@ -62,33 +51,6 @@ function OfferCardComponent({
 
   const handleMouseLeave = () => {
     onMouseLeave?.();
-  };
-
-  const handleBookmarkClick = () => {
-    if (authorizationStatus !== AuthorizationStatus.Auth) {
-      navigate(AppRoute.Login);
-      return;
-    }
-
-    if (isUpdating) {
-      return;
-    }
-
-    const nextStatus = !isFavorite;
-    setIsFavorite(nextStatus);
-    setIsUpdating(true);
-
-    dispatch(changeFavoriteStatusAction({
-      offerId: id,
-      status: nextStatus ? 1 : 0
-    }))
-      .unwrap()
-      .catch(() => {
-        setIsFavorite(!nextStatus);
-      })
-      .finally(() => {
-        setIsUpdating(false);
-      });
   };
 
   return (
@@ -124,8 +86,8 @@ function OfferCardComponent({
           <button
             className={`place-card__bookmark-button ${isFavorite ? 'place-card__bookmark-button--active' : ''} button`}
             type="button"
-            onClick={handleBookmarkClick}
-            disabled={isUpdating}
+            onClick={handleFavoriteClick}
+            disabled={isFavoriteSubmitting}
           >
             <svg className="place-card__bookmark-icon" width="18" height="19">
               <use xlinkHref="#icon-bookmark"></use>

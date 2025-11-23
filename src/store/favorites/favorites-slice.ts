@@ -1,6 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchFavoritesAction } from './favorites-thunks';
-import { changeFavoriteStatusAction } from '../offer/offer-thunks';
+import { fetchFavoritesAction, changeFavoriteStatusAction } from './favorites-thunks';
 import { Offer } from '../../types/offer';
 import { NameSpace } from '../../const';
 

@@ -1,4 +1,6 @@
-import { useAppSelector } from '../../hooks';
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { fetchFavoritesAction } from '../../store/favorites/favorites-thunks';
 import {
   getFavorites,
   getFavoritesLoadingStatus,
@@ -10,19 +12,33 @@ import Footer from '../../components/footer';
 import Spinner from '../../components/spinner';
 
 function FavoritesPage(): JSX.Element {
+  const dispatch = useAppDispatch();
 
   const favorites = useAppSelector(getFavorites);
   const favoritesByCity = useAppSelector(selectFavoritesByCity);
   const isFavoritesLoading = useAppSelector(getFavoritesLoadingStatus);
 
+  useEffect(() => {
+    dispatch(fetchFavoritesAction());
+  }, [dispatch]);
+
   if (isFavoritesLoading) {
-    return <Spinner />;
+    return (
+      <div className="page">
+        <main className="page__main page__main--favorites">
+          <div className="container" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Spinner />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   const hasFavorites = favorites.length > 0;
 
   return (
-    <>
+    <div className={`page ${!hasFavorites ? 'page--favorites-empty' : ''}`}>
       <main className={`page__main page__main--favorites ${!hasFavorites ? 'page__main--favorites-empty' : ''}`}>
         <div className="page__favorites-container container">
           {hasFavorites ? (
@@ -33,7 +49,7 @@ function FavoritesPage(): JSX.Element {
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

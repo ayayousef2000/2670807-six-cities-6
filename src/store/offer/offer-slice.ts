@@ -6,9 +6,9 @@ import {
   fetchNearbyAction,
   fetchOfferAction,
   fetchReviewsAction,
-  postCommentAction,
-  changeFavoriteStatusAction
+  postCommentAction
 } from './offer-thunks';
+import { changeFavoriteStatusAction } from '../favorites/favorites-thunks';
 
 export type RequestStatus = 'idle' | 'loading' | 'success' | 'error' | 'notFound';
 
