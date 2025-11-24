@@ -15,11 +15,11 @@ export const CITIES = [
 
 export const DEFAULT_CITY = CITIES[0];
 
-export const SortOptions = {
-  POPULAR: 'Popular',
-  PRICE_LOW_TO_HIGH: 'Price: low to high',
-  PRICE_HIGH_TO_LOW: 'Price: high to low',
-  TOP_RATED_FIRST: 'Top rated first',
+export const SortOption = {
+  Popular: 'Popular',
+  PriceLowToHigh: 'Price: low to high',
+  PriceHighToLow: 'Price: high to low',
+  TopRatedFirst: 'Top rated first',
 } as const;
 
 export enum AuthorizationStatus {

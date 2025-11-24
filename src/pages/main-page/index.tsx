@@ -15,12 +15,12 @@ import {
   selectIsOffersDataLoading,
   selectOffersError
 } from '../../store/offers/offers-selectors';
-import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
+import { CITIES, SortOption as SortOptionsEnum } from '../../const';
 import { Offer } from '../../types/offer';
 import { State } from '../../types/state';
 import './main-page.css';
 
-type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
+type SortOptionValue = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
 
 const areMapPropsEqual = (
   prevProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] },
@@ -47,7 +47,7 @@ function MainPage(): JSX.Element {
   const error = useAppSelector(selectOffersError);
   const cityOffers = useAppSelector(selectCityOffers);
 
-  const [currentSort, setCurrentSort] = useState<SortOption>(SortOptionsEnum.POPULAR);
+  const [currentSort, setCurrentSort] = useState<SortOptionValue>(SortOptionsEnum.Popular);
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
 
   const sortedOffers = useAppSelector((state: State) => selectSortedOffers(state, currentSort));
@@ -60,7 +60,7 @@ function MainPage(): JSX.Element {
     dispatch(setCity(city));
   }, [dispatch]);
 
-  const handleSortChange = useCallback((sortType: SortOption) => {
+  const handleSortChange = useCallback((sortType: SortOptionValue) => {
     setCurrentSort(sortType);
   }, []);
 

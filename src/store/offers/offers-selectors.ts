@@ -1,9 +1,9 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { NameSpace, RequestStatus, SortOptions } from '../../const';
+import { NameSpace, RequestStatus, SortOption } from '../../const';
 import { State } from '../../types/state';
 import { Offer } from '../../types/offer';
 
-type SortOption = typeof SortOptions[keyof typeof SortOptions];
+type SortOptionValue = typeof SortOption[keyof typeof SortOption];
 
 export const selectCity = (state: State): string => state[NameSpace.Offers].city;
 
@@ -26,15 +26,15 @@ export const selectCityOffers = createSelector(
 );
 
 export const selectSortedOffers = createSelector(
-  [selectCityOffers, (_state: State, sortType: SortOption) => sortType],
+  [selectCityOffers, (_state: State, sortType: SortOptionValue) => sortType],
   (cityOffers, sortType) => {
     switch (sortType) {
-      case SortOptions.PRICE_LOW_TO_HIGH:
-        return cityOffers.toSorted((a, b) => a.price - b.price);
-      case SortOptions.PRICE_HIGH_TO_LOW:
-        return cityOffers.toSorted((a, b) => b.price - a.price);
-      case SortOptions.TOP_RATED_FIRST:
-        return cityOffers.toSorted((a, b) => b.rating - a.rating);
+      case SortOption.PriceLowToHigh:
+        return cityOffers.toSorted((a: Offer, b: Offer) => a.price - b.price);
+      case SortOption.PriceHighToLow:
+        return cityOffers.toSorted((a: Offer, b: Offer) => b.price - a.price);
+      case SortOption.TopRatedFirst:
+        return cityOffers.toSorted((a: Offer, b: Offer) => b.rating - a.rating);
       default:
         return cityOffers;
     }

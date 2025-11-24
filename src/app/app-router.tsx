@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import MainPage from '../pages/main-page';
 import LoginPage from '../pages/login-page';
-import FavouritesPage from '../pages/favourites-page';
+import FavoritesPage from '../pages/favorites-page';
 import OfferPage from '../pages/offer-page';
 import NotFoundPage from '../pages/not-found-page';
 import { AppRoute } from './routes';
@@ -20,7 +20,7 @@ export function AppRouter(): JSX.Element {
           path={AppRoute.Favorites}
           element={
             <PrivateRoute>
-              <FavouritesPage />
+              <FavoritesPage />
             </PrivateRoute>
           }
         />
