@@ -13,6 +13,8 @@ export const CITIES = [
   'Dusseldorf'
 ];
 
+export const DEFAULT_CITY = CITIES[0];
+
 export const SortOptions = {
   POPULAR: 'Popular',
   PRICE_LOW_TO_HIGH: 'Price: low to high',
@@ -39,4 +41,12 @@ export enum NameSpace {
   Offers = 'OFFERS',
   Offer = 'OFFER',
   Favorites = 'FAVORITES',
+}
+
+export enum RequestStatus {
+  Idle = 'IDLE',
+  Loading = 'LOADING',
+  Success = 'SUCCESS',
+  Error = 'ERROR',
+  NotFound = 'NOT_FOUND',
 }

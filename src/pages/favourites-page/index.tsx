@@ -2,31 +2,33 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchFavoritesAction } from '../../store/favorites/favorites-thunks';
 import {
-  getFavorites,
-  getFavoritesLoadingStatus,
+  selectFavorites,
+  selectFavoritesRequestStatus,
   selectFavoritesByCity
 } from '../../store/favorites/favorites-selectors';
+import { RequestStatus } from '../../const';
 import FavoritesList from './favorites-list';
 import FavoritesEmpty from './favorites-empty';
 import Footer from '../../components/footer';
 import Spinner from '../../components/spinner';
+import './favorites-page.css';
 
 function FavoritesPage(): JSX.Element {
   const dispatch = useAppDispatch();
 
-  const favorites = useAppSelector(getFavorites);
+  const favorites = useAppSelector(selectFavorites);
   const favoritesByCity = useAppSelector(selectFavoritesByCity);
-  const isFavoritesLoading = useAppSelector(getFavoritesLoadingStatus);
+  const requestStatus = useAppSelector(selectFavoritesRequestStatus);
 
   useEffect(() => {
     dispatch(fetchFavoritesAction());
   }, [dispatch]);
 
-  if (isFavoritesLoading) {
+  if (requestStatus === RequestStatus.Loading) {
     return (
       <div className="page">
         <main className="page__main page__main--favorites">
-          <div className="container" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="container favorites__loading">
             <Spinner />
           </div>
         </main>

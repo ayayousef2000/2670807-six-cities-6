@@ -1,18 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchFavoritesAction, changeFavoriteStatusAction } from './favorites-thunks';
 import { Offer } from '../../types/offer';
-import { NameSpace } from '../../const';
+import { NameSpace, RequestStatus } from '../../const';
 
-type FavoritesState = {
+interface FavoritesState {
   favorites: Offer[];
-  isFavoritesLoading: boolean;
-  hasError: boolean;
-};
+  requestStatus: RequestStatus;
+}
 
 const initialState: FavoritesState = {
   favorites: [],
-  isFavoritesLoading: false,
-  hasError: false,
+  requestStatus: RequestStatus.Idle,
 };
 
 export const favoritesSlice = createSlice({
@@ -21,21 +19,20 @@ export const favoritesSlice = createSlice({
   reducers: {
     clearFavorites: (state) => {
       state.favorites = [];
+      state.requestStatus = RequestStatus.Idle;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers(builder) {
     builder
       .addCase(fetchFavoritesAction.pending, (state) => {
-        state.isFavoritesLoading = true;
-        state.hasError = false;
+        state.requestStatus = RequestStatus.Loading;
       })
       .addCase(fetchFavoritesAction.fulfilled, (state, action) => {
+        state.requestStatus = RequestStatus.Success;
         state.favorites = action.payload;
-        state.isFavoritesLoading = false;
       })
       .addCase(fetchFavoritesAction.rejected, (state) => {
-        state.isFavoritesLoading = false;
-        state.hasError = true;
+        state.requestStatus = RequestStatus.Error;
       })
       .addCase(changeFavoriteStatusAction.fulfilled, (state, action) => {
         const offer = action.payload;

@@ -2,12 +2,11 @@ import { memo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AppRoute } from '../../app/routes';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { AuthorizationStatus } from '../../const';
+import { AuthorizationStatus, RequestStatus } from '../../const';
 import { logoutAction } from '../../store/user/user-thunks';
 import { fetchFavoritesAction } from '../../store/favorites/favorites-thunks';
 import { selectAuthorizationStatus, selectUser, selectUserRequestStatus } from '../../store/user/user-selectors';
-import { getFavorites } from '../../store/favorites/favorites-selectors';
-import { RequestStatus } from '../../store/user/user-slice';
+import { selectFavorites } from '../../store/favorites/favorites-selectors';
 import UserAuth from './user-auth';
 import UserGuest from './user-guest';
 
@@ -16,7 +15,7 @@ function HeaderComponent(): JSX.Element {
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
   const user = useAppSelector(selectUser);
   const requestStatus = useAppSelector(selectUserRequestStatus);
-  const favorites = useAppSelector(getFavorites);
+  const favorites = useAppSelector(selectFavorites);
 
   useEffect(() => {
     if (authorizationStatus === AuthorizationStatus.Auth) {

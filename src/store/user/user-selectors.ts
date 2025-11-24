@@ -1,8 +1,6 @@
-import { NameSpace } from '../../const';
+import { AuthorizationStatus, NameSpace, RequestStatus } from '../../const';
 import { State } from '../../types/state';
 import { UserData } from '../../types/user-data';
-import { AuthorizationStatus } from '../../const';
-import { RequestStatus } from './user-slice';
 
 export const selectAuthorizationStatus = (state: State): AuthorizationStatus =>
   state[NameSpace.User].authorizationStatus;

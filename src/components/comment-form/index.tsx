@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks';
 import { postCommentAction } from '../../store/offer/offer-thunks';
 import { dropSendingStatus } from '../../store/offer/offer-slice';
 import { selectSendingStatus, selectSendingError } from '../../store/offer/offer-selectors';
+import { RequestStatus } from '../../const';
 import './comment-form.css';
 
 const MIN_COMMENT_LENGTH = 50;
@@ -63,9 +64,9 @@ function CommentFormComponent(): JSX.Element {
     review: '',
   });
 
-  const isSubmitting = sendingStatus === 'loading';
-  const isSuccess = sendingStatus === 'success';
-  const isError = sendingStatus === 'error';
+  const isSubmitting = sendingStatus === RequestStatus.Loading;
+  const isSuccess = sendingStatus === RequestStatus.Success;
+  const isError = sendingStatus === RequestStatus.Error;
 
   useEffect(() => {
     if (isSuccess) {

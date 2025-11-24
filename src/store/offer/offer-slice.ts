@@ -1,16 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { NameSpace } from '../../const';
+import { NameSpace, RequestStatus } from '../../const';
 import { Offer } from '../../types/offer';
 import { Review } from '../../types/review';
+import { changeFavoriteStatusAction } from '../favorites/favorites-thunks';
 import {
   fetchNearbyAction,
   fetchOfferAction,
   fetchReviewsAction,
   postCommentAction
 } from './offer-thunks';
-import { changeFavoriteStatusAction } from '../favorites/favorites-thunks';
-
-export type RequestStatus = 'idle' | 'loading' | 'success' | 'error' | 'notFound';
 
 interface OfferState {
   offer: Offer | null;
@@ -27,10 +25,10 @@ const initialState: OfferState = {
   offer: null,
   reviews: [],
   nearbyOffers: [],
-  offerStatus: 'idle',
-  reviewsStatus: 'idle',
-  nearbyStatus: 'idle',
-  sendingStatus: 'idle',
+  offerStatus: RequestStatus.Idle,
+  reviewsStatus: RequestStatus.Idle,
+  nearbyStatus: RequestStatus.Idle,
+  sendingStatus: RequestStatus.Idle,
   sendingError: null,
 };
 
@@ -42,60 +40,60 @@ export const offerSlice = createSlice({
       state.offer = null;
       state.reviews = [];
       state.nearbyOffers = [];
-      state.offerStatus = 'idle';
-      state.reviewsStatus = 'idle';
-      state.nearbyStatus = 'idle';
-      state.sendingStatus = 'idle';
+      state.offerStatus = RequestStatus.Idle;
+      state.reviewsStatus = RequestStatus.Idle;
+      state.nearbyStatus = RequestStatus.Idle;
+      state.sendingStatus = RequestStatus.Idle;
       state.sendingError = null;
     },
     dropSendingStatus: (state) => {
-      state.sendingStatus = 'idle';
+      state.sendingStatus = RequestStatus.Idle;
       state.sendingError = null;
     },
   },
   extraReducers(builder) {
     builder
       .addCase(fetchOfferAction.pending, (state) => {
-        state.offerStatus = 'loading';
+        state.offerStatus = RequestStatus.Loading;
       })
       .addCase(fetchOfferAction.fulfilled, (state, action) => {
-        state.offerStatus = 'success';
+        state.offerStatus = RequestStatus.Success;
         state.offer = action.payload;
       })
       .addCase(fetchOfferAction.rejected, (state, action) => {
-        state.offerStatus = action.payload === 'NOT_FOUND' ? 'notFound' : 'error';
+        state.offerStatus = action.payload === 'NOT_FOUND' ? RequestStatus.NotFound : RequestStatus.Error;
       })
       .addCase(fetchReviewsAction.pending, (state) => {
-        state.reviewsStatus = 'loading';
+        state.reviewsStatus = RequestStatus.Loading;
       })
       .addCase(fetchReviewsAction.fulfilled, (state, action) => {
-        state.reviewsStatus = 'success';
+        state.reviewsStatus = RequestStatus.Success;
         state.reviews = action.payload;
       })
       .addCase(fetchReviewsAction.rejected, (state) => {
-        state.reviewsStatus = 'error';
+        state.reviewsStatus = RequestStatus.Error;
       })
       .addCase(fetchNearbyAction.pending, (state) => {
-        state.nearbyStatus = 'loading';
+        state.nearbyStatus = RequestStatus.Loading;
       })
       .addCase(fetchNearbyAction.fulfilled, (state, action) => {
-        state.nearbyStatus = 'success';
+        state.nearbyStatus = RequestStatus.Success;
         state.nearbyOffers = action.payload;
       })
       .addCase(fetchNearbyAction.rejected, (state) => {
-        state.nearbyStatus = 'error';
+        state.nearbyStatus = RequestStatus.Error;
       })
       .addCase(postCommentAction.pending, (state) => {
-        state.sendingStatus = 'loading';
+        state.sendingStatus = RequestStatus.Loading;
         state.sendingError = null;
       })
       .addCase(postCommentAction.fulfilled, (state, action) => {
-        state.sendingStatus = 'success';
+        state.sendingStatus = RequestStatus.Success;
         state.reviews.push(action.payload);
         state.sendingError = null;
       })
       .addCase(postCommentAction.rejected, (state, action) => {
-        state.sendingStatus = 'error';
+        state.sendingStatus = RequestStatus.Error;
         state.sendingError = action.payload || 'Failed to post comment.';
       })
       .addCase(changeFavoriteStatusAction.fulfilled, (state, action) => {

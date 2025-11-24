@@ -13,15 +13,19 @@ import {
   selectCityOffers,
   selectSortedOffers,
   selectIsOffersDataLoading,
-  selectError
+  selectOffersError
 } from '../../store/offers/offers-selectors';
 import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
 import { Offer } from '../../types/offer';
+import { State } from '../../types/state';
 import './main-page.css';
 
 type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
 
-const areMapPropsEqual = (prevProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] }, nextProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] }) => {
+const areMapPropsEqual = (
+  prevProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] },
+  nextProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] }
+) => {
   const isCitySame = prevProps.city.name === nextProps.city.name;
   const isSelectedPointSame = prevProps.selectedPoint?.id === nextProps.selectedPoint?.id;
 
@@ -40,13 +44,13 @@ function MainPage(): JSX.Element {
 
   const currentCity = useAppSelector(selectCity);
   const isOffersDataLoading = useAppSelector(selectIsOffersDataLoading);
-  const error = useAppSelector(selectError);
+  const error = useAppSelector(selectOffersError);
   const cityOffers = useAppSelector(selectCityOffers);
 
   const [currentSort, setCurrentSort] = useState<SortOption>(SortOptionsEnum.POPULAR);
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
 
-  const sortedOffers = useAppSelector((state) => selectSortedOffers(state, currentSort));
+  const sortedOffers = useAppSelector((state: State) => selectSortedOffers(state, currentSort));
 
   useEffect(() => {
     dispatch(fetchOffersAction());
@@ -67,6 +71,10 @@ function MainPage(): JSX.Element {
   const handleCardMouseLeave = useCallback(() => {
     setActiveOfferId(null);
   }, []);
+
+  const handleRetry = useCallback(() => {
+    dispatch(fetchOffersAction());
+  }, [dispatch]);
 
   const selectedPoint = useMemo(() =>
     cityOffers.find((offer) => offer.id === activeOfferId),
@@ -94,7 +102,7 @@ function MainPage(): JSX.Element {
             <b className="cities__status">Could not load offers</b>
             <p className="cities__status-description">{error}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={handleRetry}
               className="form__submit button cities__status-button"
             >
               Try Again

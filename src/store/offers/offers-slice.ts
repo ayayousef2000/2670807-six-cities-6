@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { CITIES, NameSpace } from '../../const';
+import { DEFAULT_CITY, NameSpace, RequestStatus } from '../../const';
 import { Offer } from '../../types/offer';
 import { changeFavoriteStatusAction } from '../favorites/favorites-thunks';
 import { fetchOffersAction } from './offers-thunks';
@@ -7,14 +7,14 @@ import { fetchOffersAction } from './offers-thunks';
 interface OffersState {
   city: string;
   offers: Offer[];
-  isOffersDataLoading: boolean;
+  requestStatus: RequestStatus;
   error: string | null;
 }
 
 const initialState: OffersState = {
-  city: CITIES[0],
+  city: DEFAULT_CITY,
   offers: [],
-  isOffersDataLoading: false,
+  requestStatus: RequestStatus.Idle,
   error: null,
 };
 
@@ -29,18 +29,18 @@ export const offersSlice = createSlice({
   extraReducers(builder) {
     builder
       .addCase(fetchOffersAction.pending, (state) => {
-        state.isOffersDataLoading = true;
+        state.requestStatus = RequestStatus.Loading;
         state.error = null;
       })
       .addCase(fetchOffersAction.fulfilled, (state, action) => {
-        state.isOffersDataLoading = false;
+        state.requestStatus = RequestStatus.Success;
         state.offers = action.payload;
       })
       .addCase(fetchOffersAction.rejected, (state, action) => {
         if (action.meta.aborted) {
           return;
         }
-        state.isOffersDataLoading = false;
+        state.requestStatus = RequestStatus.Error;
         state.error = action.payload || 'Unknown error';
       })
       .addCase(changeFavoriteStatusAction.fulfilled, (state, action) => {

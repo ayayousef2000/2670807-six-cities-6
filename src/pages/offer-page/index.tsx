@@ -14,7 +14,7 @@ import {
   selectNearbyStatus
 } from '../../store/offer/offer-selectors';
 import { selectAuthorizationStatus } from '../../store/user/user-selectors';
-import { AuthorizationStatus } from '../../const';
+import { AuthorizationStatus, RequestStatus } from '../../const';
 import CommentForm from '../../components/comment-form';
 import Map from '../../components/map';
 import OfferList from '../../components/offer-list';
@@ -128,7 +128,7 @@ function OfferPage(): JSX.Element {
     };
   }, [loadData, dispatch]);
 
-  if (offerStatus === 'loading' || offerStatus === 'idle') {
+  if (offerStatus === RequestStatus.Loading || offerStatus === RequestStatus.Idle) {
     return (
       <div className="page">
         <main className="page__main page__main--offer">
@@ -140,11 +140,11 @@ function OfferPage(): JSX.Element {
     );
   }
 
-  if (offerStatus === 'notFound') {
+  if (offerStatus === RequestStatus.NotFound) {
     return <NotFoundPage />;
   }
 
-  if (offerStatus === 'error' || !offer) {
+  if (offerStatus === RequestStatus.Error || !offer) {
     return (
       <div className="page">
         <main className="page__main page__main--offer">
@@ -216,7 +216,7 @@ function OfferPage(): JSX.Element {
               <OfferHost host={host} description={description} />
 
               <section className="offer__reviews reviews">
-                {reviewsStatus === 'error' ? (
+                {reviewsStatus === RequestStatus.Error ? (
                   <div className="reviews__error">
                     <p className="reviews__error-text">Failed to load reviews.</p>
                     <button className="reviews__retry-button" onClick={handleRetryReviews}>
@@ -246,7 +246,7 @@ function OfferPage(): JSX.Element {
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            {nearbyStatus === 'error' ? (
+            {nearbyStatus === RequestStatus.Error ? (
               <div className="near-places__error">
                 <p className="near-places__error-text">Failed to load nearby places.</p>
                 <button className="near-places__retry-button" onClick={handleRetryNearby}>

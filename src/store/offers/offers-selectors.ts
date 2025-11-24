@@ -1,13 +1,24 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { NameSpace, SortOptions } from '../../const';
+import { NameSpace, RequestStatus, SortOptions } from '../../const';
 import { State } from '../../types/state';
+import { Offer } from '../../types/offer';
 
 type SortOption = typeof SortOptions[keyof typeof SortOptions];
 
-export const selectCity = (state: State) => state[NameSpace.Offers].city;
-export const selectOffers = (state: State) => state[NameSpace.Offers].offers;
-export const selectIsOffersDataLoading = (state: State) => state[NameSpace.Offers].isOffersDataLoading;
-export const selectError = (state: State) => state[NameSpace.Offers].error;
+export const selectCity = (state: State): string => state[NameSpace.Offers].city;
+
+export const selectOffers = (state: State): Offer[] => state[NameSpace.Offers].offers;
+
+export const selectOffersRequestStatus = (state: State): RequestStatus =>
+  state[NameSpace.Offers].requestStatus;
+
+export const selectOffersError = (state: State): string | null =>
+  state[NameSpace.Offers].error;
+
+export const selectIsOffersDataLoading = createSelector(
+  [selectOffersRequestStatus],
+  (requestStatus) => requestStatus === RequestStatus.Loading
+);
 
 export const selectCityOffers = createSelector(
   [selectOffers, selectCity],
