@@ -42,6 +42,7 @@ export enum NameSpace {
   Offer = 'OFFER',
   Favorites = 'FAVORITES',
   Reviews = 'REVIEWS',
+  NearPlaces = 'NEAR_PLACES',
 }
 
 export enum RequestStatus {

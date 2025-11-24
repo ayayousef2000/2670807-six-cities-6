@@ -2,22 +2,25 @@ import { useEffect, useCallback, memo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useFavoriteAction } from '../../hooks/use-favorites';
-import { fetchOfferAction, fetchNearbyAction } from '../../store/offer/offer-thunks';
+import { fetchOfferAction } from '../../store/offer/offer-thunks';
 import { fetchReviewsAction } from '../../store/reviews/reviews-thunks';
+import { fetchNearPlacesAction } from '../../store/near-places/near-places-thunks';
 import { dropOffer } from '../../store/offer/offer-slice';
 import { dropReviews } from '../../store/reviews/reviews-slice';
+import { dropNearPlaces } from '../../store/near-places/near-places-slice';
 import {
   selectOffer,
   selectOfferStatus,
-  selectNearbyOffersToRender,
-  selectOfferPageMapPoints,
-  selectNearbyStatus
+  selectOfferPageMapPoints
 } from '../../store/offer/offer-selectors';
+import {
+  selectNearPlacesToRender,
+  selectNearPlacesStatus
+} from '../../store/near-places/near-places-selectors';
 import {
   selectSortedReviews,
   selectReviewsStatus
 } from '../../store/reviews/reviews-selectors';
-
 import { selectAuthorizationStatus } from '../../store/user/user-selectors';
 import { AuthorizationStatus, RequestStatus } from '../../const';
 import CommentForm from '../../components/comment-form';
@@ -93,8 +96,8 @@ function OfferPage(): JSX.Element {
   const offerStatus = useAppSelector(selectOfferStatus);
   const reviews = useAppSelector(selectSortedReviews);
   const reviewsStatus = useAppSelector(selectReviewsStatus);
-  const nearbyOffers = useAppSelector(selectNearbyOffersToRender);
-  const nearbyStatus = useAppSelector(selectNearbyStatus);
+  const nearPlaces = useAppSelector(selectNearPlacesToRender);
+  const nearPlacesStatus = useAppSelector(selectNearPlacesStatus);
   const mapPoints = useAppSelector(selectOfferPageMapPoints);
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
 
@@ -109,7 +112,7 @@ function OfferPage(): JSX.Element {
     if (id) {
       dispatch(fetchOfferAction(id));
       dispatch(fetchReviewsAction(id));
-      dispatch(fetchNearbyAction(id));
+      dispatch(fetchNearPlacesAction(id));
     }
   }, [id, dispatch]);
 
@@ -119,9 +122,9 @@ function OfferPage(): JSX.Element {
     }
   }, [id, dispatch]);
 
-  const handleRetryNearby = useCallback(() => {
+  const handleRetryNearPlaces = useCallback(() => {
     if (id) {
-      dispatch(fetchNearbyAction(id));
+      dispatch(fetchNearPlacesAction(id));
     }
   }, [id, dispatch]);
 
@@ -131,6 +134,7 @@ function OfferPage(): JSX.Element {
     return () => {
       dispatch(dropOffer());
       dispatch(dropReviews());
+      dispatch(dropNearPlaces());
     };
   }, [loadData, dispatch]);
 
@@ -252,15 +256,15 @@ function OfferPage(): JSX.Element {
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            {nearbyStatus === RequestStatus.Error ? (
+            {nearPlacesStatus === RequestStatus.Error ? (
               <div className="near-places__error">
                 <p className="near-places__error-text">Failed to load nearby places.</p>
-                <button className="near-places__retry-button" onClick={handleRetryNearby}>
+                <button className="near-places__retry-button" onClick={handleRetryNearPlaces}>
                   Try again
                 </button>
               </div>
             ) : (
-              <OfferListMemo offers={nearbyOffers} variant="near-places" />
+              <OfferListMemo offers={nearPlaces} variant="near-places" />
             )}
           </section>
         </div>

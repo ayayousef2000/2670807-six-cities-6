@@ -30,16 +30,3 @@ export const fetchOfferAction = createAsyncThunk<
     return rejectWithValue('Failed to fetch offer');
   }
 });
-
-export const fetchNearbyAction = createAsyncThunk<
-  Offer[],
-  string,
-  {
-    dispatch: AppDispatch;
-    state: State;
-    extra: AxiosInstance;
-  }
->('offer/fetchNearby', async (offerId, { extra: api }) => {
-  const { data } = await api.get<Offer[]>(`${APIRoute.Offers}/${offerId}/nearby`);
-  return data;
-});
