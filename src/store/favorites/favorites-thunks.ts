@@ -1,8 +1,13 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosError } from 'axios';
+import { StatusCodes } from 'http-status-codes';
 import { Offer } from '../../types/offer';
 import { State, AppDispatch } from '../../types/state';
 import { APIRoute } from '../../const';
+
+interface CommonError {
+  message: string;
+}
 
 export const fetchFavoritesAction = createAsyncThunk<Offer[], undefined, {
   dispatch: AppDispatch;
@@ -16,14 +21,29 @@ export const fetchFavoritesAction = createAsyncThunk<Offer[], undefined, {
   }
 );
 
-export const changeFavoriteStatusAction = createAsyncThunk<Offer, { id: string; status: number }, {
-  dispatch: AppDispatch;
-  state: State;
-  extra: AxiosInstance;
-}>(
+export const changeFavoriteStatusAction = createAsyncThunk<
+  Offer,
+  { offerId: string; status: number },
+  {
+    dispatch: AppDispatch;
+    state: State;
+    extra: AxiosInstance;
+    rejectValue: string;
+  }
+>(
   'favorites/changeStatus',
-  async ({ id, status }, { extra: api }) => {
-    const { data } = await api.post<Offer>(`${APIRoute.Favorite}/${id}/${status}`);
-    return data;
+  async ({ offerId, status }, { extra: api, rejectWithValue }) => {
+    try {
+      const { data } = await api.post<Offer>(`${APIRoute.Favorite}/${offerId}/${status}`);
+      return data;
+    } catch (error) {
+      const axiosError = error as AxiosError<CommonError>;
+
+      if (axiosError.response?.status === StatusCodes.UNAUTHORIZED) {
+        return rejectWithValue('UNAUTHORIZED');
+      }
+
+      return rejectWithValue(axiosError.response?.data?.message || 'Failed to change favorite status');
+    }
   }
 );

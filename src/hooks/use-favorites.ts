@@ -26,7 +26,7 @@ export function useFavoriteAction(offerId: string, isFavorite: boolean) {
     setIsFavoriteSubmitting(true);
 
     dispatch(changeFavoriteStatusAction({
-      id: offerId,
+      offerId,
       status: isFavorite ? 0 : 1
     })).finally(() => {
       setIsFavoriteSubmitting(false);
