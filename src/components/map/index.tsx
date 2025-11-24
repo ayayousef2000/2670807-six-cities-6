@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react';
-import { Icon, Marker, layerGroup } from 'leaflet';
+import { useRef, useEffect, memo } from 'react';
+import { Icon, Marker, layerGroup, LayerGroup } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Offer } from '../../types/offer';
 import useMap from '../../hooks/use-map';
@@ -25,9 +25,10 @@ const currentCustomIcon = new Icon({
   iconAnchor: [20, 40]
 });
 
-function Map({ city, points, selectedPoint, className = 'map', style }: MapProps): JSX.Element {
+function MapComponent({ city, points, selectedPoint, className = 'map', style }: MapProps): JSX.Element {
   const mapRef = useRef(null);
   const map = useMap(mapRef, city);
+  const markerLayer = useRef<LayerGroup | null>(null);
 
   useEffect(() => {
     if (map) {
@@ -43,30 +44,28 @@ function Map({ city, points, selectedPoint, className = 'map', style }: MapProps
 
   useEffect(() => {
     if (map) {
-      const markerLayer = layerGroup().addTo(map);
+      if (!markerLayer.current) {
+        markerLayer.current = layerGroup().addTo(map);
+      } else {
+        markerLayer.current.clearLayers();
+      }
 
       points.forEach((point) => {
-        const isSelected = selectedPoint && point.id === selectedPoint.id;
-
         const marker = new Marker({
           lat: point.location.latitude,
           lng: point.location.longitude
         });
 
-        marker.setIcon(
-          isSelected ? currentCustomIcon : defaultCustomIcon
-        );
+        const isSelected = selectedPoint && point.id === selectedPoint.id;
+
+        marker.setIcon(isSelected ? currentCustomIcon : defaultCustomIcon);
 
         if (isSelected) {
           marker.setZIndexOffset(1000);
         }
 
-        marker.addTo(markerLayer);
+        marker.addTo(markerLayer.current as LayerGroup);
       });
-
-      return () => {
-        map.removeLayer(markerLayer);
-      };
     }
   }, [map, points, selectedPoint]);
 
@@ -78,5 +77,15 @@ function Map({ city, points, selectedPoint, className = 'map', style }: MapProps
     />
   );
 }
+
+function mapPropsAreEqual(prev: MapProps, next: MapProps) {
+  return (
+    prev.city.name === next.city.name &&
+    prev.selectedPoint?.id === next.selectedPoint?.id &&
+    prev.points.length === next.points.length
+  );
+}
+
+const Map = memo(MapComponent, mapPropsAreEqual);
 
 export default Map;

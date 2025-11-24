@@ -8,15 +8,15 @@ type SortOptionsProps = {
   onSortChange: (sortType: SortOption) => void;
 };
 
-function SortOptions({ currentSort, onSortChange }: SortOptionsProps): JSX.Element {
+const sortOptionValues = Object.values(SortOptionsEnum);
+
+function SortOptionsComponent({ currentSort, onSortChange }: SortOptionsProps): JSX.Element {
   const [isOpened, setIsOpened] = useState(false);
 
   const handleSortTypeClick = (sortType: SortOption) => {
     onSortChange(sortType);
     setIsOpened(false);
   };
-
-  const sortOptions = Object.values(SortOptionsEnum);
 
   return (
     <form className="places__sorting" action="#" method="get">
@@ -34,7 +34,7 @@ function SortOptions({ currentSort, onSortChange }: SortOptionsProps): JSX.Eleme
       <ul
         className={`places__options places__options--custom ${isOpened ? 'places__options--opened' : ''}`}
       >
-        {sortOptions.map((sortType) => (
+        {sortOptionValues.map((sortType) => (
           <li
             key={sortType}
             className={`places__option ${currentSort === sortType ? 'places__option--active' : ''}`}
@@ -49,6 +49,5 @@ function SortOptions({ currentSort, onSortChange }: SortOptionsProps): JSX.Eleme
   );
 }
 
-const SortOptionsMemo = memo(SortOptions);
-
-export default SortOptionsMemo;
+const SortOptions = memo(SortOptionsComponent);
+export default SortOptions;

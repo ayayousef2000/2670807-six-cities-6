@@ -1,68 +1,43 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import OfferList from '../../components/offer-list';
 import Map from '../../components/map';
 import CitiesList from '../../components/cities-list';
 import SortOptions from '../../components/sort-options';
 import Spinner from '../../components/spinner';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { setCity } from '../../store/offers-slice';
-import { fetchOffersAction } from '../../store/api-actions';
+import { setCity } from '../../store/offers/offers-slice';
+import { fetchOffersAction } from '../../store/offers/offers-thunks';
+import {
+  selectCity,
+  selectCityOffers,
+  selectSortedOffers,
+  selectIsOffersDataLoading,
+  selectError
+} from '../../store/offers/offers-selectors';
 import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
-import { Offer } from '../../types/offer';
 import './main-page.css';
 
 type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
 
-const sortOffers = (offers: Offer[], sortType: SortOption): Offer[] => {
-  switch (sortType) {
-    case SortOptionsEnum.PRICE_LOW_TO_HIGH:
-      return offers.toSorted((a, b) => a.price - b.price);
-    case SortOptionsEnum.PRICE_HIGH_TO_LOW:
-      return offers.toSorted((a, b) => b.price - a.price);
-    case SortOptionsEnum.TOP_RATED_FIRST:
-      return offers.toSorted((a, b) => b.rating - a.rating);
-    default:
-      return offers;
-  }
-};
-
 function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
 
-  const currentCity = useAppSelector((state) => state.offers.city);
-  const allOffers = useAppSelector((state) => state.offers.offers);
-  const isOffersDataLoading = useAppSelector((state) => state.offers.isOffersDataLoading);
-  const error = useAppSelector((state) => state.offers.error);
+  const currentCity = useAppSelector(selectCity);
+  const isOffersDataLoading = useAppSelector(selectIsOffersDataLoading);
+  const error = useAppSelector(selectError);
+  const cityOffers = useAppSelector(selectCityOffers);
 
   const [currentSort, setCurrentSort] = useState<SortOption>(SortOptionsEnum.POPULAR);
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
 
+  const sortedOffers = useAppSelector((state) => selectSortedOffers(state, currentSort));
+
   useEffect(() => {
-    dispatch(fetchOffersAction());
+    const promise = dispatch(fetchOffersAction());
+    return () => {
+      promise.abort();
+    };
   }, [dispatch]);
-
-  const cityOffers = useMemo(
-    () => allOffers.filter((offer) => offer.city.name === currentCity),
-    [allOffers, currentCity]
-  );
-
-  const sortedOffers = useMemo(
-    () => sortOffers(cityOffers, currentSort),
-    [cityOffers, currentSort]
-  );
-
-  const errorMessage = useMemo(() => {
-    if (!error) {
-      return '';
-    }
-    if (error.includes('404')) {
-      return 'The offers data could not be found. The server might be down or configured incorrectly.';
-    }
-    if (error.includes('timeout') || error.includes('Network') || error.includes('500')) {
-      return 'The server is not responding. Please check your internet connection.';
-    }
-    return 'An unexpected error occurred. Please try again later.';
-  }, [error]);
 
   const handleCityChange = useCallback((city: string) => {
     dispatch(setCity(city));
@@ -83,8 +58,9 @@ function MainPage(): JSX.Element {
   const offersCount = cityOffers.length;
   const hasOffers = offersCount > 0;
   const isMainEmpty = !hasOffers || !!error;
+  const selectedPoint = cityOffers.find((offer) => offer.id === activeOfferId);
 
-  if (isOffersDataLoading) {
+  if (isOffersDataLoading && !hasOffers) {
     return <Spinner />;
   }
 
@@ -103,13 +79,13 @@ function MainPage(): JSX.Element {
       <div className="cities">
         <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
 
-          {isMainEmpty && (
+          {isMainEmpty ? (
             <section className="cities__no-places">
               <div className="cities__status-wrapper tabs__content">
                 {error ? (
                   <>
                     <b className="cities__status">Could not load offers</b>
-                    <p className="cities__status-description">{errorMessage}</p>
+                    <p className="cities__status-description">{error}</p>
                     <button
                       onClick={() => window.location.reload()}
                       className="form__submit button cities__status-button"
@@ -127,9 +103,7 @@ function MainPage(): JSX.Element {
                 )}
               </div>
             </section>
-          )}
-
-          {!isMainEmpty && (
+          ) : (
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
               <b className="places__found">{offersCount} places to stay in {currentCity}</b>
@@ -148,11 +122,11 @@ function MainPage(): JSX.Element {
           )}
 
           <div className="cities__right-section">
-            {!isMainEmpty && (
+            {!isMainEmpty && cityOffers.length > 0 && (
               <Map
                 city={cityOffers[0].city}
                 points={cityOffers}
-                selectedPoint={cityOffers.find((offer) => offer.id === activeOfferId)}
+                selectedPoint={selectedPoint}
                 className="cities__map"
               />
             )}

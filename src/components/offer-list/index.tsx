@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import OfferCard from '../offer-card';
 import { Offer } from '../../types/offer';
 
@@ -10,7 +11,7 @@ type OfferListProps = {
   onCardMouseLeave?: () => void;
 };
 
-function OfferList({ offers, variant = 'cities', onCardMouseEnter, onCardMouseLeave }: OfferListProps): JSX.Element {
+function OfferListComponent({ offers, variant = 'cities', onCardMouseEnter, onCardMouseLeave }: OfferListProps): JSX.Element {
   const listClassName =
     variant === 'cities'
       ? 'cities__places-list places__list tabs__content'
@@ -31,4 +32,5 @@ function OfferList({ offers, variant = 'cities', onCardMouseEnter, onCardMouseLe
   );
 }
 
+const OfferList = memo(OfferListComponent);
 export default OfferList;

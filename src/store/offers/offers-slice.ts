@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { CITIES } from '../const';
-import { Offer } from '../types/offer';
-import { fetchOffersAction } from './api-actions';
+import { CITIES, NameSpace } from '../../const';
+import { Offer } from '../../types/offer';
+import { fetchOffersAction } from './offers-thunks';
 
 interface OffersState {
   city: string;
@@ -18,7 +18,7 @@ const initialState: OffersState = {
 };
 
 export const offersSlice = createSlice({
-  name: 'offers',
+  name: NameSpace.Offers,
   initialState,
   reducers: {
     setCity: (state, action: PayloadAction<string>) => {
@@ -31,17 +31,18 @@ export const offersSlice = createSlice({
         state.isOffersDataLoading = true;
         state.error = null;
       })
-      .addCase(fetchOffersAction.fulfilled, (state, action: PayloadAction<Offer[]>) => {
+      .addCase(fetchOffersAction.fulfilled, (state, action) => {
         state.isOffersDataLoading = false;
         state.offers = action.payload;
       })
       .addCase(fetchOffersAction.rejected, (state, action) => {
+        if (action.meta.aborted) {
+          return;
+        }
         state.isOffersDataLoading = false;
-        state.error = action.payload || 'Unknown error occurred';
+        state.error = action.payload || 'Unknown error';
       });
   },
 });
 
 export const { setCity } = offersSlice.actions;
-
-export default offersSlice.reducer;

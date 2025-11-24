@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Offer } from '../../types/offer';
 import { getRatingWidth } from '../../utils';
@@ -11,7 +12,7 @@ type OfferCardProps = {
   onMouseLeave?: () => void;
 };
 
-function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: OfferCardProps): JSX.Element {
+function OfferCardComponent({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: OfferCardProps): JSX.Element {
   const {
     id,
     isPremium,
@@ -46,7 +47,15 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
       )}
       <div className={`${variant}__image-wrapper place-card__image-wrapper`}>
         <Link to={`/offer/${id}`}>
-          <img className="place-card__image" src={previewImage} width="260" height="200" alt={title} />
+          <img
+            className="place-card__image"
+            src={previewImage}
+            width="260"
+            height="200"
+            alt={title}
+            loading="lazy"
+            decoding="async"
+          />
         </Link>
       </div>
       <div className="place-card__info">
@@ -82,4 +91,5 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
   );
 }
 
+const OfferCard = memo(OfferCardComponent);
 export default OfferCard;
