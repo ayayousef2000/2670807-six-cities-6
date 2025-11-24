@@ -2,17 +2,22 @@ import { useEffect, useCallback, memo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useFavoriteAction } from '../../hooks/use-favorites';
-import { fetchOfferAction, fetchReviewsAction, fetchNearbyAction } from '../../store/offer/offer-thunks';
+import { fetchOfferAction, fetchNearbyAction } from '../../store/offer/offer-thunks';
+import { fetchReviewsAction } from '../../store/reviews/reviews-thunks';
 import { dropOffer } from '../../store/offer/offer-slice';
+import { dropReviews } from '../../store/reviews/reviews-slice';
 import {
   selectOffer,
   selectOfferStatus,
-  selectSortedReviews,
   selectNearbyOffersToRender,
   selectOfferPageMapPoints,
-  selectReviewsStatus,
   selectNearbyStatus
 } from '../../store/offer/offer-selectors';
+import {
+  selectSortedReviews,
+  selectReviewsStatus
+} from '../../store/reviews/reviews-selectors';
+
 import { selectAuthorizationStatus } from '../../store/user/user-selectors';
 import { AuthorizationStatus, RequestStatus } from '../../const';
 import CommentForm from '../../components/comment-form';
@@ -125,6 +130,7 @@ function OfferPage(): JSX.Element {
     loadData();
     return () => {
       dispatch(dropOffer());
+      dispatch(dropReviews());
     };
   }, [loadData, dispatch]);
 
@@ -132,7 +138,7 @@ function OfferPage(): JSX.Element {
     return (
       <div className="page">
         <main className="page__main page__main--offer">
-          <div className="container" style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="container offer__spinner-container">
             <Spinner />
           </div>
         </main>

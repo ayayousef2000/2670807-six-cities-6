@@ -20,6 +20,13 @@
   margin-top: 20px;
 }
 
+.offer__spinner-container {
+  height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .reviews__error,
 .near-places__error {
   display: flex;
