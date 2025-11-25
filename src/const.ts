@@ -23,9 +23,9 @@ export const SortOption = {
 } as const;
 
 export enum AuthorizationStatus {
-  Auth = 'AUTH',
-  NoAuth = 'NO_AUTH',
-  Unknown = 'UNKNOWN',
+  Auth = 'auth',
+  NoAuth = 'noAuth',
+  Unknown = 'unknown',
 }
 
 export enum APIRoute {
@@ -37,18 +37,18 @@ export enum APIRoute {
 }
 
 export enum NameSpace {
-  User = 'USER',
-  Offers = 'OFFERS',
-  Offer = 'OFFER',
-  Favorites = 'FAVORITES',
-  Reviews = 'REVIEWS',
-  NearPlaces = 'NEAR_PLACES',
+  User = 'user',
+  Offers = 'offers',
+  Offer = 'offer',
+  Favorites = 'favorites',
+  Reviews = 'reviews',
+  NearPlaces = 'nearPlaces',
 }
 
 export enum RequestStatus {
-  Idle = 'IDLE',
-  Loading = 'LOADING',
-  Success = 'SUCCESS',
-  Error = 'ERROR',
-  NotFound = 'NOT_FOUND',
+  Idle = 'idle',
+  Loading = 'loading',
+  Success = 'success',
+  Error = 'error',
+  NotFound = 'notFound',
 }

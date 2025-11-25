@@ -32,18 +32,6 @@ function MapComponent({ city, points, selectedPoint, className = 'map', style }:
 
   useEffect(() => {
     if (map) {
-      map.setView(
-        {
-          lat: city.location.latitude,
-          lng: city.location.longitude
-        },
-        city.location.zoom
-      );
-    }
-  }, [map, city]);
-
-  useEffect(() => {
-    if (map) {
       if (!markerLayer.current) {
         markerLayer.current = layerGroup().addTo(map);
       } else {
@@ -82,7 +70,7 @@ function mapPropsAreEqual(prev: MapProps, next: MapProps) {
   return (
     prev.city.name === next.city.name &&
     prev.selectedPoint?.id === next.selectedPoint?.id &&
-    prev.points.length === next.points.length
+    prev.points === next.points
   );
 }
 

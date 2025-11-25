@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Review as ReviewType } from '../../types/review';
 import { getRatingWidth } from '../../utils';
 
@@ -12,7 +13,7 @@ function formatUserName(name: string): string {
     .join(' ');
 }
 
-function Review({ review }: ReviewProps): JSX.Element {
+function ReviewComponent({ review }: ReviewProps): JSX.Element {
   const { user, rating, comment, date } = review;
   const { name, avatarUrl } = user;
 
@@ -54,4 +55,5 @@ function Review({ review }: ReviewProps): JSX.Element {
   );
 }
 
+const Review = memo(ReviewComponent);
 export default Review;

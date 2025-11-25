@@ -84,11 +84,7 @@ const OfferHost = memo(({ host, description }: { host: Host; description: string
 ));
 OfferHost.displayName = 'OfferHost';
 
-const MapMemo = memo(Map);
-const ReviewsListMemo = memo(ReviewsList);
-const OfferListMemo = memo(OfferList);
-
-function OfferPage(): JSX.Element {
+function OfferPageComponent(): JSX.Element {
   const { id } = useParams();
   const dispatch = useAppDispatch();
 
@@ -236,7 +232,7 @@ function OfferPage(): JSX.Element {
                 ) : (
                   <>
                     <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">{reviews.length}</span></h2>
-                    <ReviewsListMemo reviews={reviews} />
+                    <ReviewsList reviews={reviews} />
                   </>
                 )}
 
@@ -245,7 +241,7 @@ function OfferPage(): JSX.Element {
             </div>
           </div>
 
-          <MapMemo
+          <Map
             className="offer__map map"
             city={city}
             points={mapPoints}
@@ -264,7 +260,7 @@ function OfferPage(): JSX.Element {
                 </button>
               </div>
             ) : (
-              <OfferListMemo offers={nearPlaces} variant="near-places" />
+              <OfferList offers={nearPlaces} variant="near-places" />
             )}
           </section>
         </div>
@@ -273,4 +269,5 @@ function OfferPage(): JSX.Element {
   );
 }
 
+const OfferPage = memo(OfferPageComponent);
 export default OfferPage;

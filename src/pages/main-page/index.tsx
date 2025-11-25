@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, memo, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import OfferList from '../../components/offer-list';
 import Map from '../../components/map';
 import CitiesList from '../../components/cities-list';
@@ -16,28 +16,10 @@ import {
   selectOffersError
 } from '../../store/offers/offers-selectors';
 import { CITIES, SortOption as SortOptionsEnum } from '../../const';
-import { Offer } from '../../types/offer';
 import { State } from '../../types/state';
 import './main-page.css';
 
 type SortOptionValue = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
-
-const areMapPropsEqual = (
-  prevProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] },
-  nextProps: { points: Offer[]; selectedPoint: Offer | undefined; city: Offer['city'] }
-) => {
-  const isCitySame = prevProps.city.name === nextProps.city.name;
-  const isSelectedPointSame = prevProps.selectedPoint?.id === nextProps.selectedPoint?.id;
-
-  const arePointsSame =
-    prevProps.points.length === nextProps.points.length &&
-    prevProps.points[0]?.id === nextProps.points[0]?.id;
-
-  return isCitySame && isSelectedPointSame && arePointsSame;
-};
-
-const MapMemo = memo(Map, areMapPropsEqual);
-const OfferListMemo = memo(OfferList);
 
 function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
@@ -126,7 +108,7 @@ function MainPage(): JSX.Element {
           onSortChange={handleSortChange}
         />
 
-        <OfferListMemo
+        <OfferList
           offers={sortedOffers}
           onCardMouseEnter={handleCardMouseEnter}
           onCardMouseLeave={handleCardMouseLeave}
@@ -155,7 +137,7 @@ function MainPage(): JSX.Element {
 
             <div className="cities__right-section">
               {!isMainEmpty && !error && (
-                <MapMemo
+                <Map
                   city={cityOffers[0].city}
                   points={cityOffers}
                   selectedPoint={selectedPoint}
