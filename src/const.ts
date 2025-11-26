@@ -1,8 +1,8 @@
 export const URL_MARKER_DEFAULT = 'img/pin.svg';
 export const URL_MARKER_CURRENT = 'img/pin-active.svg';
 
-export const TILE_LAYER_URL_PATTERN = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-export const TILE_LAYER_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+export const TILE_LAYER_URL_PATTERN = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const TILE_LAYER_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
 export const CITIES = [
   'Paris',
@@ -13,17 +13,19 @@ export const CITIES = [
   'Dusseldorf'
 ];
 
-export const SortOptions = {
-  POPULAR: 'Popular',
-  PRICE_LOW_TO_HIGH: 'Price: low to high',
-  PRICE_HIGH_TO_LOW: 'Price: high to low',
-  TOP_RATED_FIRST: 'Top rated first',
+export const DEFAULT_CITY = CITIES[0];
+
+export const SortOption = {
+  Popular: 'Popular',
+  PriceLowToHigh: 'Price: low to high',
+  PriceHighToLow: 'Price: high to low',
+  TopRatedFirst: 'Top rated first',
 } as const;
 
 export enum AuthorizationStatus {
-  Auth = 'AUTH',
-  NoAuth = 'NO_AUTH',
-  Unknown = 'UNKNOWN',
+  Auth = 'auth',
+  NoAuth = 'noAuth',
+  Unknown = 'unknown',
 }
 
 export enum APIRoute {
@@ -31,10 +33,22 @@ export enum APIRoute {
   Login = '/login',
   Logout = '/logout',
   Comments = '/comments',
+  Favorite = '/favorite',
 }
 
 export enum NameSpace {
-  User = 'USER',
-  Offers = 'OFFERS',
-  Offer = 'OFFER',
+  User = 'user',
+  Offers = 'offers',
+  Offer = 'offer',
+  Favorites = 'favorites',
+  Reviews = 'reviews',
+  NearPlaces = 'nearPlaces',
+}
+
+export enum RequestStatus {
+  Idle = 'idle',
+  Loading = 'loading',
+  Success = 'success',
+  Error = 'error',
+  NotFound = 'notFound',
 }

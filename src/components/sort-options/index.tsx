@@ -1,19 +1,19 @@
 import { useState, memo } from 'react';
-import { SortOptions as SortOptionsEnum } from '../../const';
+import { SortOption as SortOptionsEnum } from '../../const';
 
-type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
+type SortOptionValue = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
 
 type SortOptionsProps = {
-  currentSort: SortOption;
-  onSortChange: (sortType: SortOption) => void;
+  currentSort: SortOptionValue;
+  onSortChange: (sortType: SortOptionValue) => void;
 };
 
-const sortOptionValues = Object.values(SortOptionsEnum);
+const sortOptionValues = Object.values(SortOptionsEnum) as SortOptionValue[];
 
 function SortOptionsComponent({ currentSort, onSortChange }: SortOptionsProps): JSX.Element {
   const [isOpened, setIsOpened] = useState(false);
 
-  const handleSortTypeClick = (sortType: SortOption) => {
+  const handleSortTypeClick = (sortType: SortOptionValue) => {
     onSortChange(sortType);
     setIsOpened(false);
   };

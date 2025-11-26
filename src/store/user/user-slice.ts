@@ -1,14 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { AuthorizationStatus, NameSpace } from '../../const';
+import { AuthorizationStatus, NameSpace, RequestStatus } from '../../const';
 import { UserData } from '../../types/user-data';
 import { checkAuthAction, loginAction, logoutAction } from './user-thunks';
-
-export enum RequestStatus {
-  Idle = 'IDLE',
-  Loading = 'LOADING',
-  Success = 'SUCCESS',
-  Error = 'ERROR',
-}
 
 interface UserState {
   authorizationStatus: AuthorizationStatus;

@@ -1,42 +1,22 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { NameSpace } from '../../const';
-import { RootState } from '../index';
+import { NameSpace, RequestStatus } from '../../const';
+import { State } from '../../types/state';
 import { Offer } from '../../types/offer';
+import { selectNearPlacesToRender } from '../near-places/near-places-selectors';
 
-const MAX_NEARBY_OFFERS = 3;
-const MAX_REVIEWS = 10;
+export const selectOffer = (state: State): Offer | null =>
+  state[NameSpace.Offer].offer;
 
-export const selectOffer = (state: RootState) => state[NameSpace.Offer].offer;
-export const selectOfferStatus = (state: RootState) => state[NameSpace.Offer].offerStatus;
-
-export const selectReviews = (state: RootState) => state[NameSpace.Offer].reviews;
-export const selectReviewsStatus = (state: RootState) => state[NameSpace.Offer].reviewsStatus;
-
-export const selectNearbyOffers = (state: RootState) => state[NameSpace.Offer].nearbyOffers;
-export const selectNearbyStatus = (state: RootState) => state[NameSpace.Offer].nearbyStatus;
-
-export const selectSendingStatus = (state: RootState) => state[NameSpace.Offer].sendingStatus;
-export const selectSendingError = (state: RootState) => state[NameSpace.Offer].sendingError;
-
-export const selectSortedReviews = createSelector(
-  [selectReviews],
-  (reviews) => [...reviews]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, MAX_REVIEWS)
-);
-
-export const selectNearbyOffersToRender = createSelector(
-  [selectNearbyOffers],
-  (nearbyOffers) => nearbyOffers.slice(0, MAX_NEARBY_OFFERS)
-);
+export const selectOfferStatus = (state: State): RequestStatus =>
+  state[NameSpace.Offer].offerStatus;
 
 export const selectOfferPageMapPoints = createSelector(
-  [selectOffer, selectNearbyOffersToRender],
-  (currentOffer, nearbyOffers): Offer[] => {
+  [selectOffer, selectNearPlacesToRender],
+  (currentOffer, nearPlaces): Offer[] => {
     if (!currentOffer) {
-      return nearbyOffers;
+      return nearPlaces;
     }
-    const isOfferInNearby = nearbyOffers.some((o) => o.id === currentOffer.id);
-    return isOfferInNearby ? nearbyOffers : [...nearbyOffers, currentOffer];
+    const isOfferInNearby = nearPlaces.some((o) => o.id === currentOffer.id);
+    return isOfferInNearby ? nearPlaces : [...nearPlaces, currentOffer];
   }
 );

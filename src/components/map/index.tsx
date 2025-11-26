@@ -15,32 +15,20 @@ type MapProps = {
 
 const defaultCustomIcon = new Icon({
   iconUrl: URL_MARKER_DEFAULT,
-  iconSize: [40, 40],
-  iconAnchor: [20, 40]
+  iconSize: [27, 39],
+  iconAnchor: [12.5, 39]
 });
 
 const currentCustomIcon = new Icon({
   iconUrl: URL_MARKER_CURRENT,
-  iconSize: [40, 40],
-  iconAnchor: [20, 40]
+  iconSize: [27, 39],
+  iconAnchor: [12.5, 39]
 });
 
 function MapComponent({ city, points, selectedPoint, className = 'map', style }: MapProps): JSX.Element {
   const mapRef = useRef(null);
   const map = useMap(mapRef, city);
   const markerLayer = useRef<LayerGroup | null>(null);
-
-  useEffect(() => {
-    if (map) {
-      map.setView(
-        {
-          lat: city.location.latitude,
-          lng: city.location.longitude
-        },
-        city.location.zoom
-      );
-    }
-  }, [map, city]);
 
   useEffect(() => {
     if (map) {
@@ -82,7 +70,7 @@ function mapPropsAreEqual(prev: MapProps, next: MapProps) {
   return (
     prev.city.name === next.city.name &&
     prev.selectedPoint?.id === next.selectedPoint?.id &&
-    prev.points.length === next.points.length
+    prev.points === next.points
   );
 }
 

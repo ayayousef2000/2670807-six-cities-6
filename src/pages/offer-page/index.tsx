@@ -1,19 +1,28 @@
 import { useEffect, useCallback, memo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { fetchOfferAction, fetchReviewsAction, fetchNearbyAction } from '../../store/offer/offer-thunks';
+import { useFavoriteAction } from '../../hooks/use-favorites';
+import { fetchOfferAction } from '../../store/offer/offer-thunks';
+import { fetchReviewsAction } from '../../store/reviews/reviews-thunks';
+import { fetchNearPlacesAction } from '../../store/near-places/near-places-thunks';
 import { dropOffer } from '../../store/offer/offer-slice';
+import { dropReviews } from '../../store/reviews/reviews-slice';
+import { dropNearPlaces } from '../../store/near-places/near-places-slice';
 import {
   selectOffer,
   selectOfferStatus,
-  selectSortedReviews,
-  selectNearbyOffersToRender,
-  selectOfferPageMapPoints,
-  selectReviewsStatus,
-  selectNearbyStatus
+  selectOfferPageMapPoints
 } from '../../store/offer/offer-selectors';
+import {
+  selectNearPlacesToRender,
+  selectNearPlacesStatus
+} from '../../store/near-places/near-places-selectors';
+import {
+  selectSortedReviews,
+  selectReviewsStatus
+} from '../../store/reviews/reviews-selectors';
 import { selectAuthorizationStatus } from '../../store/user/user-selectors';
-import { AuthorizationStatus } from '../../const';
+import { AuthorizationStatus, RequestStatus } from '../../const';
 import CommentForm from '../../components/comment-form';
 import Map from '../../components/map';
 import OfferList from '../../components/offer-list';
@@ -75,11 +84,7 @@ const OfferHost = memo(({ host, description }: { host: Host; description: string
 ));
 OfferHost.displayName = 'OfferHost';
 
-const MapMemo = memo(Map);
-const ReviewsListMemo = memo(ReviewsList);
-const OfferListMemo = memo(OfferList);
-
-function OfferPage(): JSX.Element {
+function OfferPageComponent(): JSX.Element {
   const { id } = useParams();
   const dispatch = useAppDispatch();
 
@@ -87,18 +92,23 @@ function OfferPage(): JSX.Element {
   const offerStatus = useAppSelector(selectOfferStatus);
   const reviews = useAppSelector(selectSortedReviews);
   const reviewsStatus = useAppSelector(selectReviewsStatus);
-  const nearbyOffers = useAppSelector(selectNearbyOffersToRender);
-  const nearbyStatus = useAppSelector(selectNearbyStatus);
+  const nearPlaces = useAppSelector(selectNearPlacesToRender);
+  const nearPlacesStatus = useAppSelector(selectNearPlacesStatus);
   const mapPoints = useAppSelector(selectOfferPageMapPoints);
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
 
   const isAuthorized = authorizationStatus === AuthorizationStatus.Auth;
 
+  const { handleFavoriteClick, isFavoriteSubmitting } = useFavoriteAction(
+    offer?.id || '',
+    offer?.isFavorite || false
+  );
+
   const loadData = useCallback(() => {
     if (id) {
       dispatch(fetchOfferAction(id));
       dispatch(fetchReviewsAction(id));
-      dispatch(fetchNearbyAction(id));
+      dispatch(fetchNearPlacesAction(id));
     }
   }, [id, dispatch]);
 
@@ -108,9 +118,9 @@ function OfferPage(): JSX.Element {
     }
   }, [id, dispatch]);
 
-  const handleRetryNearby = useCallback(() => {
+  const handleRetryNearPlaces = useCallback(() => {
     if (id) {
-      dispatch(fetchNearbyAction(id));
+      dispatch(fetchNearPlacesAction(id));
     }
   }, [id, dispatch]);
 
@@ -119,14 +129,16 @@ function OfferPage(): JSX.Element {
     loadData();
     return () => {
       dispatch(dropOffer());
+      dispatch(dropReviews());
+      dispatch(dropNearPlaces());
     };
   }, [loadData, dispatch]);
 
-  if (offerStatus === 'loading' || offerStatus === 'idle') {
+  if (offerStatus === RequestStatus.Loading || offerStatus === RequestStatus.Idle) {
     return (
       <div className="page">
         <main className="page__main page__main--offer">
-          <div className="container" style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="container offer__spinner-container">
             <Spinner />
           </div>
         </main>
@@ -134,11 +146,11 @@ function OfferPage(): JSX.Element {
     );
   }
 
-  if (offerStatus === 'notFound') {
+  if (offerStatus === RequestStatus.NotFound) {
     return <NotFoundPage />;
   }
 
-  if (offerStatus === 'error' || !offer) {
+  if (offerStatus === RequestStatus.Error || !offer) {
     return (
       <div className="page">
         <main className="page__main page__main--offer">
@@ -177,7 +189,12 @@ function OfferPage(): JSX.Element {
 
               <div className="offer__name-wrapper">
                 <h1 className="offer__name">{title}</h1>
-                <button className={`offer__bookmark-button ${isFavorite ? 'offer__bookmark-button--active' : ''} button`} type="button">
+                <button
+                  className={`offer__bookmark-button ${isFavorite ? 'offer__bookmark-button--active' : ''} button`}
+                  type="button"
+                  onClick={handleFavoriteClick}
+                  disabled={isFavoriteSubmitting}
+                >
                   <svg className="offer__bookmark-icon" width="31" height="33">
                     <use xlinkHref="#icon-bookmark"></use>
                   </svg>
@@ -205,7 +222,7 @@ function OfferPage(): JSX.Element {
               <OfferHost host={host} description={description} />
 
               <section className="offer__reviews reviews">
-                {reviewsStatus === 'error' ? (
+                {reviewsStatus === RequestStatus.Error ? (
                   <div className="reviews__error">
                     <p className="reviews__error-text">Failed to load reviews.</p>
                     <button className="reviews__retry-button" onClick={handleRetryReviews}>
@@ -215,7 +232,7 @@ function OfferPage(): JSX.Element {
                 ) : (
                   <>
                     <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">{reviews.length}</span></h2>
-                    <ReviewsListMemo reviews={reviews} />
+                    <ReviewsList reviews={reviews} />
                   </>
                 )}
 
@@ -224,7 +241,7 @@ function OfferPage(): JSX.Element {
             </div>
           </div>
 
-          <MapMemo
+          <Map
             className="offer__map map"
             city={city}
             points={mapPoints}
@@ -235,15 +252,15 @@ function OfferPage(): JSX.Element {
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            {nearbyStatus === 'error' ? (
+            {nearPlacesStatus === RequestStatus.Error ? (
               <div className="near-places__error">
                 <p className="near-places__error-text">Failed to load nearby places.</p>
-                <button className="near-places__retry-button" onClick={handleRetryNearby}>
+                <button className="near-places__retry-button" onClick={handleRetryNearPlaces}>
                   Try again
                 </button>
               </div>
             ) : (
-              <OfferListMemo offers={nearbyOffers} variant="near-places" />
+              <OfferList offers={nearPlaces} variant="near-places" />
             )}
           </section>
         </div>
@@ -252,4 +269,5 @@ function OfferPage(): JSX.Element {
   );
 }
 
+const OfferPage = memo(OfferPageComponent);
 export default OfferPage;

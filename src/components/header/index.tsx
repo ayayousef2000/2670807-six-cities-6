@@ -1,12 +1,12 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AppRoute } from '../../app/routes';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { AuthorizationStatus } from '../../const';
+import { AuthorizationStatus, RequestStatus } from '../../const';
 import { logoutAction } from '../../store/user/user-thunks';
+import { fetchFavoritesAction } from '../../store/favorites/favorites-thunks';
 import { selectAuthorizationStatus, selectUser, selectUserRequestStatus } from '../../store/user/user-selectors';
-import { selectOffers } from '../../store/offers/offers-selectors';
-import { RequestStatus } from '../../store/user/user-slice';
+import { selectFavorites } from '../../store/favorites/favorites-selectors';
 import UserAuth from './user-auth';
 import UserGuest from './user-guest';
 
@@ -15,12 +15,15 @@ function HeaderComponent(): JSX.Element {
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
   const user = useAppSelector(selectUser);
   const requestStatus = useAppSelector(selectUserRequestStatus);
-  const offers = useAppSelector(selectOffers);
+  const favorites = useAppSelector(selectFavorites);
 
-  const favoriteCount = useMemo(() =>
-    offers.filter((offer) => offer.isFavorite).length,
-  [offers]);
+  useEffect(() => {
+    if (authorizationStatus === AuthorizationStatus.Auth) {
+      dispatch(fetchFavoritesAction());
+    }
+  }, [authorizationStatus, dispatch]);
 
+  const favoriteCount = favorites.length;
   const isLoggingOut = requestStatus === RequestStatus.Loading;
 
   const handleSignOut = useCallback(() => {

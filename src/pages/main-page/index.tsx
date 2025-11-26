@@ -1,9 +1,10 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import OfferList from '../../components/offer-list';
 import Map from '../../components/map';
 import CitiesList from '../../components/cities-list';
 import SortOptions from '../../components/sort-options';
 import Spinner from '../../components/spinner';
+import MainEmpty from '../../components/main-empty';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { setCity } from '../../store/offers/offers-slice';
 import { fetchOffersAction } from '../../store/offers/offers-thunks';
@@ -12,38 +13,36 @@ import {
   selectCityOffers,
   selectSortedOffers,
   selectIsOffersDataLoading,
-  selectError
+  selectOffersError
 } from '../../store/offers/offers-selectors';
-import { CITIES, SortOptions as SortOptionsEnum } from '../../const';
+import { CITIES, SortOption as SortOptionsEnum } from '../../const';
+import { State } from '../../types/state';
 import './main-page.css';
 
-type SortOption = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
+type SortOptionValue = typeof SortOptionsEnum[keyof typeof SortOptionsEnum];
 
 function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
 
   const currentCity = useAppSelector(selectCity);
   const isOffersDataLoading = useAppSelector(selectIsOffersDataLoading);
-  const error = useAppSelector(selectError);
+  const error = useAppSelector(selectOffersError);
   const cityOffers = useAppSelector(selectCityOffers);
 
-  const [currentSort, setCurrentSort] = useState<SortOption>(SortOptionsEnum.POPULAR);
+  const [currentSort, setCurrentSort] = useState<SortOptionValue>(SortOptionsEnum.Popular);
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
 
-  const sortedOffers = useAppSelector((state) => selectSortedOffers(state, currentSort));
+  const sortedOffers = useAppSelector((state: State) => selectSortedOffers(state, currentSort));
 
   useEffect(() => {
-    const promise = dispatch(fetchOffersAction());
-    return () => {
-      promise.abort();
-    };
+    dispatch(fetchOffersAction());
   }, [dispatch]);
 
   const handleCityChange = useCallback((city: string) => {
     dispatch(setCity(city));
   }, [dispatch]);
 
-  const handleSortChange = useCallback((sortType: SortOption) => {
+  const handleSortChange = useCallback((sortType: SortOptionValue) => {
     setCurrentSort(sortType);
   }, []);
 
@@ -55,86 +54,102 @@ function MainPage(): JSX.Element {
     setActiveOfferId(null);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    dispatch(fetchOffersAction());
+  }, [dispatch]);
+
+  const selectedPoint = useMemo(() =>
+    cityOffers.find((offer) => offer.id === activeOfferId),
+  [cityOffers, activeOfferId]);
+
   const offersCount = cityOffers.length;
   const hasOffers = offersCount > 0;
-  const isMainEmpty = !hasOffers || !!error;
-  const selectedPoint = cityOffers.find((offer) => offer.id === activeOfferId);
+  const isMainEmpty = !hasOffers;
 
-  if (isOffersDataLoading && !hasOffers) {
-    return <Spinner />;
+  if (isOffersDataLoading) {
+    return (
+      <div className="page page--gray page--main">
+        <main className="page__main page__main--index">
+          <Spinner />
+        </main>
+      </div>
+    );
   }
 
-  return (
-    <main className={`page__main page__main--index ${isMainEmpty ? 'page__main--index-empty' : ''}`}>
-      <h1 className="visually-hidden">Cities</h1>
-
-      <div className="tabs">
-        <CitiesList
-          cities={CITIES}
-          currentCity={currentCity}
-          onCityChange={handleCityChange}
-        />
-      </div>
-
-      <div className="cities">
-        <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
-
-          {isMainEmpty ? (
-            <section className="cities__no-places">
-              <div className="cities__status-wrapper tabs__content">
-                {error ? (
-                  <>
-                    <b className="cities__status">Could not load offers</b>
-                    <p className="cities__status-description">{error}</p>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="form__submit button cities__status-button"
-                    >
-                      Try Again
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <b className="cities__status">No places to stay available</b>
-                    <p className="cities__status-description">
-                      We could not find any property available at the moment in {currentCity}
-                    </p>
-                  </>
-                )}
-              </div>
-            </section>
-          ) : (
-            <section className="cities__places places">
-              <h2 className="visually-hidden">Places</h2>
-              <b className="places__found">{offersCount} places to stay in {currentCity}</b>
-
-              <SortOptions
-                currentSort={currentSort}
-                onSortChange={handleSortChange}
-              />
-
-              <OfferList
-                offers={sortedOffers}
-                onCardMouseEnter={handleCardMouseEnter}
-                onCardMouseLeave={handleCardMouseLeave}
-              />
-            </section>
-          )}
-
-          <div className="cities__right-section">
-            {!isMainEmpty && cityOffers.length > 0 && (
-              <Map
-                city={cityOffers[0].city}
-                points={cityOffers}
-                selectedPoint={selectedPoint}
-                className="cities__map"
-              />
-            )}
+  const renderContent = () => {
+    if (error) {
+      return (
+        <section className="cities__no-places">
+          <div className="cities__status-wrapper tabs__content">
+            <b className="cities__status">Could not load offers</b>
+            <p className="cities__status-description">{error}</p>
+            <button
+              onClick={handleRetry}
+              className="form__submit button cities__status-button"
+            >
+              Try Again
+            </button>
           </div>
+        </section>
+      );
+    }
 
+    if (isMainEmpty) {
+      return <MainEmpty city={currentCity} />;
+    }
+
+    return (
+      <section className="cities__places places">
+        <h2 className="visually-hidden">Places</h2>
+        <b className="places__found">{offersCount} places to stay in {currentCity}</b>
+
+        <SortOptions
+          currentSort={currentSort}
+          onSortChange={handleSortChange}
+        />
+
+        <OfferList
+          offers={sortedOffers}
+          onCardMouseEnter={handleCardMouseEnter}
+          onCardMouseLeave={handleCardMouseLeave}
+        />
+      </section>
+    );
+  };
+
+  return (
+    <div className="page page--gray page--main">
+      <main className={`page__main page__main--index ${isMainEmpty ? 'page__main--index-empty' : ''}`}>
+        <h1 className="visually-hidden">Cities</h1>
+
+        <div className="tabs">
+          <CitiesList
+            cities={CITIES}
+            currentCity={currentCity}
+            onCityChange={handleCityChange}
+          />
         </div>
-      </div>
-    </main>
+
+        <div className="cities">
+          <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
+
+            {renderContent()}
+
+            <div className="cities__right-section">
+              {!isMainEmpty && !error && (
+                <Map
+                  city={cityOffers[0].city}
+                  points={cityOffers}
+                  selectedPoint={selectedPoint}
+                  className="cities__map"
+                />
+              )}
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
 
