@@ -6,15 +6,15 @@ import SortOptions from '../../components/sort-options';
 import Spinner from '../../components/spinner';
 import MainEmpty from '../../components/main-empty';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { setCity } from '../../store/offers/offers-slice';
-import { fetchOffersAction } from '../../store/offers/offers-thunks';
 import {
+  setCity,
+  fetchOffersAction,
   selectCity,
   selectCityOffers,
   selectSortedOffers,
   selectIsOffersDataLoading,
   selectOffersError
-} from '../../store/offers/offers-selectors';
+} from '../../store/offers';
 import { CITIES, SortOption as SortOptionsEnum } from '../../const';
 import { State } from '../../types/state';
 import './main-page.css';

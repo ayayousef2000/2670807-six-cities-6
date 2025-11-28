@@ -1,9 +1,12 @@
 import { useState, ChangeEvent, FormEvent, useEffect, useCallback, memo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { postCommentAction } from '../../store/reviews/reviews-thunks';
-import { dropSendingStatus } from '../../store/reviews/reviews-slice';
-import { selectSendingStatus, selectSendingError } from '../../store/reviews/reviews-selectors';
+import {
+  postCommentAction,
+  dropSendingStatus,
+  selectSendingStatus,
+  selectSendingError
+} from '../../store/reviews';
 import { RequestStatus } from '../../const';
 import './comment-form.css';
 

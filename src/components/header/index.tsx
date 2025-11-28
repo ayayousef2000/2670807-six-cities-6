@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 import { AppRoute } from '../../app/routes';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { AuthorizationStatus, RequestStatus } from '../../const';
-import { logoutAction } from '../../store/user/user-thunks';
-import { fetchFavoritesAction } from '../../store/favorites/favorites-thunks';
-import { selectAuthorizationStatus, selectUser, selectUserRequestStatus } from '../../store/user/user-selectors';
-import { selectFavorites } from '../../store/favorites/favorites-selectors';
+import {
+  logoutAction,
+  selectAuthorizationStatus,
+  selectUser,
+  selectUserRequestStatus
+} from '../../store/user';
+import { fetchFavoritesAction, selectFavorites } from '../../store/favorites';
 import UserAuth from './user-auth';
 import UserGuest from './user-guest';
 

@@ -1,6 +1,6 @@
 import { FormEvent, useState, ChangeEvent, useCallback, memo } from 'react';
 import { useAppDispatch } from '../../hooks';
-import { loginAction } from '../../store/user/user-thunks';
+import { loginAction } from '../../store/user';
 import './login-form.css';
 
 function LoginForm(): JSX.Element {
