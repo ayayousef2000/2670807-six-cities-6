@@ -10,14 +10,14 @@ import { State } from '../../types/state';
 import { RequestStatus } from '../../const';
 import { makeFakeOffer } from '../../utils/mocks';
 import * as FavoritesThunks from '../../store/favorites/favorites-thunks';
-import {
-  selectFavorites,
-  selectFavoritesByCity,
-  selectFavoritesRequestStatus
-} from '../../store/favorites/favorites-selectors';
+import * as FavoritesSelectors from '../../store/favorites/favorites-selectors';
 
 vi.mock('./favorites-list', () => ({
-  default: () => <div data-testid="favorites-list">Favorites List Component</div>
+  default: ({ favoritesByCity }: { favoritesByCity: Record<string, unknown[]> }) => (
+    <div data-testid="favorites-list">
+      Items count: {Object.keys(favoritesByCity).length}
+    </div>
+  )
 }));
 
 vi.mock('./favorites-empty', () => ({
@@ -32,98 +32,90 @@ vi.mock('../../components/spinner', () => ({
   default: () => <div data-testid="spinner">Loading Favorites...</div>
 }));
 
-vi.mock('../../store/favorites/favorites-selectors', () => ({
-  selectFavorites: vi.fn(),
-  selectFavoritesByCity: vi.fn(),
-  selectFavoritesRequestStatus: vi.fn()
-}));
-
 const api = createAPI();
 const middlewares = [thunk.withExtraArgument(api)];
 const mockStore = configureMockStore<State, Action<string>, ThunkDispatch<State, typeof api, Action>>(middlewares);
 
 describe('Page: FavoritesPage', () => {
+  let store: ReturnType<typeof mockStore>;
+
+  const selectFavoritesSpy = vi.spyOn(FavoritesSelectors, 'selectFavorites');
+  const selectFavoritesByCitySpy = vi.spyOn(FavoritesSelectors, 'selectFavoritesByCity');
+  const selectFavoritesRequestStatusSpy = vi.spyOn(FavoritesSelectors, 'selectFavoritesRequestStatus');
+  const fetchFavoritesSpy = vi.spyOn(FavoritesThunks, 'fetchFavoritesAction');
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should render Spinner when status is Loading', () => {
-    vi.mocked(selectFavoritesRequestStatus).mockReturnValue(RequestStatus.Loading);
-    vi.mocked(selectFavorites).mockReturnValue([]);
-    vi.mocked(selectFavoritesByCity).mockReturnValue({});
-
-    const store = mockStore({} as State);
-
-    render(
+  const renderFavoritesPage = () => {
+    store = mockStore({} as State);
+    return render(
       <Provider store={store}>
         <MemoryRouter>
           <FavoritesPage />
         </MemoryRouter>
       </Provider>
     );
+  };
+
+  it('should dispatch fetchFavoritesAction on mount', () => {
+    selectFavoritesRequestStatusSpy.mockReturnValue(RequestStatus.Idle);
+    selectFavoritesSpy.mockReturnValue([]);
+    selectFavoritesByCitySpy.mockReturnValue({});
+
+    renderFavoritesPage();
+
+    expect(fetchFavoritesSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should render Spinner when status is Loading', () => {
+    selectFavoritesRequestStatusSpy.mockReturnValue(RequestStatus.Loading);
+    selectFavoritesSpy.mockReturnValue([]);
+    selectFavoritesByCitySpy.mockReturnValue({});
+
+    renderFavoritesPage();
 
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
     expect(screen.getByTestId('footer')).toBeInTheDocument();
   });
 
-  it('should render FavoritesEmpty when list is empty', () => {
-    vi.mocked(selectFavoritesRequestStatus).mockReturnValue(RequestStatus.Success);
-    vi.mocked(selectFavorites).mockReturnValue([]);
-    vi.mocked(selectFavoritesByCity).mockReturnValue({});
+  it('should render FavoritesEmpty and apply "empty" CSS classes when list is empty', () => {
+    selectFavoritesRequestStatusSpy.mockReturnValue(RequestStatus.Success);
+    selectFavoritesSpy.mockReturnValue([]);
+    selectFavoritesByCitySpy.mockReturnValue({});
 
-    const store = mockStore({} as State);
-
-    render(
-      <Provider store={store}>
-        <MemoryRouter>
-          <FavoritesPage />
-        </MemoryRouter>
-      </Provider>
-    );
+    const { container } = renderFavoritesPage();
 
     expect(screen.getByTestId('favorites-empty')).toBeInTheDocument();
     expect(screen.queryByTestId('favorites-list')).not.toBeInTheDocument();
-    expect(screen.getByTestId('footer')).toBeInTheDocument();
+
+    const pageWrapper = container.querySelector('.page');
+    expect(pageWrapper).toHaveClass('page--favorites-empty');
+
+    const mainWrapper = container.querySelector('.page__main');
+    expect(mainWrapper).toHaveClass('page__main--favorites-empty');
   });
 
-  it('should render FavoritesList when favorites exist', () => {
+  it('should render FavoritesList and remove "empty" CSS classes when favorites exist', () => {
     const fakeOffer = makeFakeOffer(true);
+    const mockFavoritesByCity = { [fakeOffer.city.name]: [fakeOffer] };
 
-    vi.mocked(selectFavoritesRequestStatus).mockReturnValue(RequestStatus.Success);
-    vi.mocked(selectFavorites).mockReturnValue([fakeOffer]);
-    vi.mocked(selectFavoritesByCity).mockReturnValue({ [fakeOffer.city.name]: [fakeOffer] });
+    selectFavoritesRequestStatusSpy.mockReturnValue(RequestStatus.Success);
+    selectFavoritesSpy.mockReturnValue([fakeOffer]);
+    selectFavoritesByCitySpy.mockReturnValue(mockFavoritesByCity);
 
-    const store = mockStore({} as State);
-
-    render(
-      <Provider store={store}>
-        <MemoryRouter>
-          <FavoritesPage />
-        </MemoryRouter>
-      </Provider>
-    );
+    const { container } = renderFavoritesPage();
 
     expect(screen.getByTestId('favorites-list')).toBeInTheDocument();
     expect(screen.queryByTestId('favorites-empty')).not.toBeInTheDocument();
-    expect(screen.getByTestId('footer')).toBeInTheDocument();
-  });
 
-  it('should dispatch fetchFavoritesAction on mount', () => {
-    vi.mocked(selectFavoritesRequestStatus).mockReturnValue(RequestStatus.Idle);
-    vi.mocked(selectFavorites).mockReturnValue([]);
-    vi.mocked(selectFavoritesByCity).mockReturnValue({});
+    expect(screen.getByTestId('favorites-list')).toHaveTextContent('Items count: 1');
 
-    const store = mockStore({} as State);
-    const fetchSpy = vi.spyOn(FavoritesThunks, 'fetchFavoritesAction');
+    const pageWrapper = container.querySelector('.page');
+    expect(pageWrapper).not.toHaveClass('page--favorites-empty');
 
-    render(
-      <Provider store={store}>
-        <MemoryRouter>
-          <FavoritesPage />
-        </MemoryRouter>
-      </Provider>
-    );
-
-    expect(fetchSpy).toHaveBeenCalled();
+    const mainWrapper = container.querySelector('.page__main');
+    expect(mainWrapper).not.toHaveClass('page__main--favorites-empty');
   });
 });

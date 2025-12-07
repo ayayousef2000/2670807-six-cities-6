@@ -46,6 +46,28 @@ const mockStore = configureMockStore<State, Action<string>, ThunkDispatch<State,
 
 describe('Page: OfferPage', () => {
   const offerId = '1';
+  let store: ReturnType<typeof mockStore>;
+
+  const defaultState = {
+    offer: {
+      offerStatus: RequestStatus.Idle,
+      status: RequestStatus.Idle,
+      offer: null
+    },
+    reviews: {
+      reviewsStatus: RequestStatus.Idle,
+      status: RequestStatus.Idle,
+      reviews: []
+    },
+    nearPlaces: {
+      nearPlacesStatus: RequestStatus.Idle,
+      status: RequestStatus.Idle,
+      nearPlaces: []
+    },
+    user: {
+      authorizationStatus: AuthorizationStatus.Unknown
+    },
+  };
 
   beforeAll(() => {
     Object.defineProperty(window, 'scrollTo', {
@@ -58,12 +80,59 @@ describe('Page: OfferPage', () => {
     vi.clearAllMocks();
   });
 
+  it('should dispatch fetch actions for Offer, Reviews, and NearPlaces on mount', () => {
+    const fetchOfferSpy = vi.spyOn(OfferActions, 'fetchOfferAction');
+    const fetchReviewsSpy = vi.spyOn(ReviewActions, 'fetchReviewsAction');
+    const fetchNearPlacesSpy = vi.spyOn(NearPlacesActions, 'fetchNearPlacesAction');
+
+    store = mockStore(defaultState as unknown as State);
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[`/offer/${offerId}`]}>
+          <Routes>
+            <Route path="/offer/:id" element={<OfferPage />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+
+    expect(fetchOfferSpy).toHaveBeenCalledWith(offerId);
+    expect(fetchReviewsSpy).toHaveBeenCalledWith(offerId);
+    expect(fetchNearPlacesSpy).toHaveBeenCalledWith(offerId);
+  });
+
+  it('should dispatch drop actions on unmount to clear state', () => {
+    const dropOfferSpy = vi.spyOn(OfferActions, 'dropOffer');
+    const dropReviewsSpy = vi.spyOn(ReviewActions, 'dropReviews');
+    const dropNearPlacesSpy = vi.spyOn(NearPlacesActions, 'dropNearPlaces');
+
+    store = mockStore({
+      ...defaultState,
+      offer: { ...defaultState.offer, offerStatus: RequestStatus.Success, offer: makeFakeOffer() }
+    } as unknown as State);
+
+    const { unmount } = render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[`/offer/${offerId}`]}>
+          <Routes>
+            <Route path="/offer/:id" element={<OfferPage />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+
+    unmount();
+
+    expect(dropOfferSpy).toHaveBeenCalled();
+    expect(dropReviewsSpy).toHaveBeenCalled();
+    expect(dropNearPlacesSpy).toHaveBeenCalled();
+  });
+
   it('should render Spinner when offer status is Loading', () => {
-    const store = mockStore({
-      offer: { offerStatus: RequestStatus.Loading, status: RequestStatus.Loading, offer: null },
-      reviews: { reviewsStatus: RequestStatus.Idle, status: RequestStatus.Idle, reviews: [] },
-      nearPlaces: { nearPlacesStatus: RequestStatus.Idle, status: RequestStatus.Idle, nearPlaces: [] },
-      user: { authorizationStatus: AuthorizationStatus.Unknown },
+    store = mockStore({
+      ...defaultState,
+      offer: { ...defaultState.offer, offerStatus: RequestStatus.Loading },
     } as unknown as State);
 
     render(
@@ -80,11 +149,9 @@ describe('Page: OfferPage', () => {
   });
 
   it('should render NotFoundPage when offer status is NotFound', () => {
-    const store = mockStore({
-      offer: { offerStatus: RequestStatus.NotFound, status: RequestStatus.NotFound, offer: null },
-      reviews: { reviewsStatus: RequestStatus.Idle, status: RequestStatus.Idle, reviews: [] },
-      nearPlaces: { nearPlacesStatus: RequestStatus.Idle, status: RequestStatus.Idle, nearPlaces: [] },
-      user: { authorizationStatus: AuthorizationStatus.Unknown },
+    store = mockStore({
+      ...defaultState,
+      offer: { ...defaultState.offer, offerStatus: RequestStatus.NotFound },
     } as unknown as State);
 
     render(
@@ -100,15 +167,12 @@ describe('Page: OfferPage', () => {
     expect(screen.getByTestId('not-found-page')).toBeInTheDocument();
   });
 
-  it('should render Error view with Try Again button when offer status is Error', () => {
-    const store = mockStore({
-      offer: { offerStatus: RequestStatus.Error, status: RequestStatus.Error, offer: null },
-      reviews: { reviews: [], reviewsStatus: RequestStatus.Idle, status: RequestStatus.Idle },
-      nearPlaces: { nearPlaces: [], nearPlacesStatus: RequestStatus.Idle, status: RequestStatus.Idle },
-      user: { authorizationStatus: AuthorizationStatus.NoAuth },
+  it('should render Error view with "Try Again" button when offer status is Error', () => {
+    const fetchOfferSpy = vi.spyOn(OfferActions, 'fetchOfferAction');
+    store = mockStore({
+      ...defaultState,
+      offer: { ...defaultState.offer, offerStatus: RequestStatus.Error },
     } as unknown as State);
-
-    const fetchSpy = vi.spyOn(OfferActions, 'fetchOfferAction');
 
     render(
       <Provider store={store}>
@@ -122,19 +186,31 @@ describe('Page: OfferPage', () => {
 
     expect(screen.getByText(/Failed to load data/i)).toBeInTheDocument();
 
-    const retryButton = screen.getByText('Try Again');
+    const retryButton = screen.getByRole('button', { name: /Try Again/i });
     fireEvent.click(retryButton);
 
-    expect(fetchSpy).toHaveBeenCalledWith(offerId);
+    expect(fetchOfferSpy).toHaveBeenCalledWith(offerId);
   });
 
-  it('should render offer content correctly when data is loaded successfully', () => {
-    const fakeOffer = makeFakeOffer();
-    const store = mockStore({
-      offer: { offerStatus: RequestStatus.Success, status: RequestStatus.Success, offer: fakeOffer },
+  it('should render offer content correctly (Premium label, Gallery limit, Price)', () => {
+    const detailedOffer = {
+      ...makeFakeOffer(),
+      isPremium: true,
+      price: 999,
+      images: Array.from({ length: 10 }, (_, i) => `https://url.com/img${i}.jpg`),
+      goods: ['Wi-Fi', 'Heating'],
+      host: {
+        name: 'Angelina',
+        isPro: true,
+        avatarUrl: 'img/avatar.jpg'
+      }
+    };
+
+    store = mockStore({
+      ...defaultState,
+      offer: { offerStatus: RequestStatus.Success, status: RequestStatus.Success, offer: detailedOffer },
       reviews: { reviewsStatus: RequestStatus.Success, status: RequestStatus.Success, reviews: [] },
       nearPlaces: { nearPlacesStatus: RequestStatus.Success, status: RequestStatus.Success, nearPlaces: [] },
-      user: { authorizationStatus: AuthorizationStatus.NoAuth },
     } as unknown as State);
 
     render(
@@ -147,21 +223,23 @@ describe('Page: OfferPage', () => {
       </Provider>
     );
 
-    expect(screen.getByText(fakeOffer.title)).toBeInTheDocument();
-    expect(screen.getByText(`€${fakeOffer.price}`)).toBeInTheDocument();
+    expect(screen.getByText('Premium')).toBeInTheDocument();
+
+    expect(screen.getByText('€999')).toBeInTheDocument();
+
+    const images = screen.getAllByRole('img', { name: detailedOffer.title });
+    expect(images).toHaveLength(6);
+
     expect(screen.getByTestId('map-component')).toBeInTheDocument();
     expect(screen.getByTestId('reviews-list')).toBeInTheDocument();
     expect(screen.getByTestId('near-places-list')).toBeInTheDocument();
-
-    expect(screen.queryByTestId('comment-form')).not.toBeInTheDocument();
   });
 
-  it('should render CommentForm when user is Authorized', () => {
+  it('should render CommentForm only when user is Authorized', () => {
     const fakeOffer = makeFakeOffer();
-    const store = mockStore({
+    store = mockStore({
+      ...defaultState,
       offer: { offerStatus: RequestStatus.Success, status: RequestStatus.Success, offer: fakeOffer },
-      reviews: { reviewsStatus: RequestStatus.Success, status: RequestStatus.Success, reviews: [] },
-      nearPlaces: { nearPlacesStatus: RequestStatus.Success, status: RequestStatus.Success, nearPlaces: [] },
       user: { authorizationStatus: AuthorizationStatus.Auth },
     } as unknown as State);
 
@@ -180,10 +258,9 @@ describe('Page: OfferPage', () => {
 
   it('should handle bookmark button click via custom hook', () => {
     const fakeOffer = makeFakeOffer();
-    const store = mockStore({
+    store = mockStore({
+      ...defaultState,
       offer: { offerStatus: RequestStatus.Success, status: RequestStatus.Success, offer: fakeOffer },
-      reviews: { reviewsStatus: RequestStatus.Success, status: RequestStatus.Success, reviews: [] },
-      nearPlaces: { nearPlacesStatus: RequestStatus.Success, status: RequestStatus.Success, nearPlaces: [] },
       user: { authorizationStatus: AuthorizationStatus.Auth },
     } as unknown as State);
 
@@ -203,13 +280,13 @@ describe('Page: OfferPage', () => {
     expect(mockHandleFavoriteClick).toHaveBeenCalledTimes(1);
   });
 
-  it('should dispatch retry actions when child sections fail to load', () => {
+  it('should dispatch retry actions when Review or NearPlaces sections fail', () => {
     const fakeOffer = makeFakeOffer();
-    const store = mockStore({
+    store = mockStore({
+      ...defaultState,
       offer: { offerStatus: RequestStatus.Success, status: RequestStatus.Success, offer: fakeOffer },
       reviews: { reviewsStatus: RequestStatus.Error, status: RequestStatus.Error, reviews: [] },
       nearPlaces: { nearPlacesStatus: RequestStatus.Error, status: RequestStatus.Error, nearPlaces: [] },
-      user: { authorizationStatus: AuthorizationStatus.Auth },
     } as unknown as State);
 
     const reviewsSpy = vi.spyOn(ReviewActions, 'fetchReviewsAction');
@@ -225,7 +302,7 @@ describe('Page: OfferPage', () => {
       </Provider>
     );
 
-    const retryButtons = screen.getAllByText('Try again');
+    const retryButtons = screen.getAllByRole('button', { name: /Try again/i });
     expect(retryButtons).toHaveLength(2);
 
     fireEvent.click(retryButtons[0]);

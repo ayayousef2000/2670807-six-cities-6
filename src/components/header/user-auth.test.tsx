@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import UserAuth from './user-auth';
 import { withHistory } from '../../utils/mock-component';
@@ -47,5 +48,25 @@ describe('Component: UserAuth', () => {
     const signOutLink = screen.getByRole('link', { name: /Signing out.../i });
     expect(signOutLink).toBeInTheDocument();
     expect(signOutLink).toHaveStyle({ pointerEvents: 'none', opacity: '0.5' });
+  });
+
+  it('should call onSignOut when clicking sign out link', async () => {
+    const mockUser = makeFakeUser();
+    const mockOnSignOut = vi.fn();
+    const component = withHistory(
+      <UserAuth
+        user={mockUser}
+        favoriteCount={0}
+        onSignOut={mockOnSignOut}
+        isLoggingOut={false}
+      />
+    );
+
+    render(component);
+
+    const signOutLink = screen.getByRole('link', { name: /Sign out/i });
+    await userEvent.click(signOutLink);
+
+    expect(mockOnSignOut).toHaveBeenCalledTimes(1);
   });
 });
