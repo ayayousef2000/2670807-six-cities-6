@@ -2,26 +2,26 @@ import { useEffect, useCallback, memo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useFavoriteAction } from '../../hooks/use-favorites';
-import { fetchOfferAction } from '../../store/offer/offer-thunks';
-import { fetchReviewsAction } from '../../store/reviews/reviews-thunks';
-import { fetchNearPlacesAction } from '../../store/near-places/near-places-thunks';
-import { dropOffer } from '../../store/offer/offer-slice';
-import { dropReviews } from '../../store/reviews/reviews-slice';
-import { dropNearPlaces } from '../../store/near-places/near-places-slice';
 import {
+  fetchOfferAction,
+  dropOffer,
   selectOffer,
   selectOfferStatus,
   selectOfferPageMapPoints
-} from '../../store/offer/offer-selectors';
+} from '../../store/offer';
 import {
-  selectNearPlacesToRender,
-  selectNearPlacesStatus
-} from '../../store/near-places/near-places-selectors';
-import {
+  fetchReviewsAction,
+  dropReviews,
   selectSortedReviews,
   selectReviewsStatus
-} from '../../store/reviews/reviews-selectors';
-import { selectAuthorizationStatus } from '../../store/user/user-selectors';
+} from '../../store/reviews';
+import {
+  fetchNearPlacesAction,
+  dropNearPlaces,
+  selectNearPlacesToRender,
+  selectNearPlacesStatus
+} from '../../store/near-places';
+import { selectAuthorizationStatus } from '../../store/user';
 import { AuthorizationStatus, RequestStatus } from '../../const';
 import CommentForm from '../../components/comment-form';
 import Map from '../../components/map';

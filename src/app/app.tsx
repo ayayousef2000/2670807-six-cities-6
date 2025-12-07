@@ -2,8 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { AppRouter } from './app-router';
 import { useAppDispatch, useAppSelector } from '../hooks/index';
-import { checkAuthAction } from '../store/user/user-thunks';
-import { selectAuthorizationStatus } from '../store/user/user-selectors';
+import { checkAuthAction, selectAuthorizationStatus } from '../store/user';
 import { AuthorizationStatus } from '../const';
 import Spinner from '../components/spinner';
 

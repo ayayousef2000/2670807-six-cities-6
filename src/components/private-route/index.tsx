@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { AppRoute } from '../../app/routes';
 import { AuthorizationStatus } from '../../const';
 import { useAppSelector } from '../../hooks';
-import { selectAuthorizationStatus } from '../../store/user/user-selectors';
+import { selectAuthorizationStatus } from '../../store/user';
 import Spinner from '../spinner';
 
 type PrivateRouteProps = {
