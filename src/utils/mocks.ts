@@ -1,7 +1,16 @@
 import { faker } from '@faker-js/faker';
 import { UserData } from '../types/user-data';
-import { Offer } from '../types/offer';
+import { Offer, City } from '../types/offer';
 import { Review } from '../types/review';
+
+export const makeFakeCity = (): City => ({
+  name: faker.location.city(),
+  location: {
+    latitude: faker.location.latitude(),
+    longitude: faker.location.longitude(),
+    zoom: 10,
+  },
+});
 
 export const makeFakeUser = (): UserData => ({
   name: faker.person.fullName(),
@@ -18,14 +27,7 @@ export const makeFakeOffer = (isFavorite = false): Offer => ({
   price: faker.number.int({ min: 100, max: 1000 }),
   previewImage: faker.image.url(),
   images: [faker.image.url(), faker.image.url(), faker.image.url()],
-  city: {
-    name: faker.location.city(),
-    location: {
-      latitude: faker.location.latitude(),
-      longitude: faker.location.longitude(),
-      zoom: 10,
-    },
-  },
+  city: makeFakeCity(),
   location: {
     latitude: faker.location.latitude(),
     longitude: faker.location.longitude(),
