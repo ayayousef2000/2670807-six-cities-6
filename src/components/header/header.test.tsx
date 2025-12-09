@@ -48,7 +48,7 @@ describe('Component: Header', () => {
     expect(screen.queryByText(/Sign in/i)).not.toBeInTheDocument();
   });
 
-  it('should dispatch logoutAction when Sign out is clicked', async () => {
+  it('should dispatch "logoutAction" when Sign out is clicked', async () => {
     const fakeUser = makeFakeUser();
     const { withStoreComponent, mockStore } = withStore(withHistory(<Header />), {
       [NameSpace.User]: {
@@ -68,14 +68,17 @@ describe('Component: Header', () => {
     await userEvent.click(signOutLink);
 
     const actions = mockStore.getActions();
-    const isLogoutActionDispatched = actions.some(
-      (action) => action.type === logoutAction.pending.type
+    
+    expect(actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: logoutAction.pending.type,
+        })
+      ])
     );
-
-    expect(isLogoutActionDispatched).toBe(true);
   });
 
-  it('should dispatch fetchFavoritesAction when mounted with Auth status', () => {
+  it('should dispatch "fetchFavoritesAction" when mounted with Auth status', () => {
     const fakeUser = makeFakeUser();
     const { withStoreComponent, mockStore } = withStore(withHistory(<Header />), {
       [NameSpace.User]: {
@@ -92,9 +95,13 @@ describe('Component: Header', () => {
     render(withStoreComponent);
 
     const actions = mockStore.getActions();
-    const fetchFavoritesDispatched = actions.some(
-      (action) => action.type === fetchFavoritesAction.pending.type
+
+    expect(actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: fetchFavoritesAction.pending.type,
+        })
+      ])
     );
-    expect(fetchFavoritesDispatched).toBe(true);
   });
 });

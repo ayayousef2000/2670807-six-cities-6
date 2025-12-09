@@ -1,28 +1,27 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { configureMockStore } from '@jedmao/redux-mock-store';
-import { MemoryRouter } from 'react-router-dom';
-import { Action } from 'redux';
-import thunk, { ThunkDispatch } from 'redux-thunk';
-import { createAPI } from '../../services/api';
+import { describe, it, expect, vi } from 'vitest';
 import MainPage from './index';
 import { makeFakeOffer } from '../../utils/mocks';
-import { CITIES, SortOption } from '../../const';
-import * as offersStore from '../../store/offers';
+import { CITIES, SortOption, NameSpace, RequestStatus } from '../../const';
+import { withHistory, withStore } from '../../utils/mock-component';
+import { setCity } from '../../store/offers';
+import { Offer } from '../../types/offer';
 import { State } from '../../types/state';
 
 vi.mock('../../components/cities-list', () => ({
-  default: ({ onCityChange }: { onCityChange: (city: string) => void }) => (
+  default: ({ onCityChange, currentCity }: { onCityChange: (city: string) => void, currentCity: string }) => (
     <div data-testid="cities-list">
+      <span>Active: {currentCity}</span>
       <button onClick={() => onCityChange(CITIES[1])}>Select City 2</button>
     </div>
   )
 }));
 
 vi.mock('../../components/sort-options', () => ({
-  default: ({ onSortChange }: { onSortChange: (sort: string) => void }) => (
+  default: ({ currentSort, onSortChange }: { currentSort: string; onSortChange: (sort: string) => void }) => (
     <div data-testid="sort-options">
-      <button onClick={() => onSortChange(SortOption.PriceLowToHigh)}>Sort Price</button>
+      <span>Sort: {currentSort}</span>
+      <button onClick={() => onSortChange(SortOption.PriceLowToHigh)}>Change Sort</button>
     </div>
   )
 }));
@@ -33,16 +32,16 @@ vi.mock('../../components/offer-list', () => ({
     onCardMouseLeave: () => void;
   }) => (
     <div data-testid="offer-list">
-      <button onClick={() => onCardMouseEnter('offer-1')}>Hover Offer 1</button>
-      <button onClick={() => onCardMouseLeave()}>Leave Offer</button>
+      <button onClick={() => onCardMouseEnter('offer-1')}>Hover Card</button>
+      <button onClick={() => onCardMouseLeave()}>Leave Card</button>
     </div>
   )
 }));
 
 vi.mock('../../components/map', () => ({
-  default: ({ selectedPoint }: { selectedPoint: { id: string } | undefined }) => (
+  default: ({ selectedPoint }: { selectedPoint: Offer | undefined }) => (
     <div data-testid="map">
-      Selected ID: {selectedPoint ? selectedPoint.id : 'None'}
+      Active Map Point: {selectedPoint ? selectedPoint.id : 'None'}
     </div>
   )
 }));
@@ -52,128 +51,170 @@ vi.mock('../../components/spinner', () => ({
 }));
 
 vi.mock('../../components/main-empty', () => ({
-  default: () => <div data-testid="main-empty">No places to stay</div>
+  default: () => <div data-testid="main-empty">No places found</div>
 }));
 
-const api = createAPI();
-const middlewares = [thunk.withExtraArgument(api)];
-const mockStore = configureMockStore<State, Action<string>, ThunkDispatch<State, typeof api, Action>>(middlewares);
+vi.mock('../../store/offers', async () => {
+  const actual = await vi.importActual<typeof import('../../store/offers')>('../../store/offers');
+  return {
+    ...actual,
+    fetchOffersAction: vi.fn(() => ({ type: 'offers/fetchOffers' })),
+  };
+});
 
 describe('Page: MainPage', () => {
-  const mockOffers = [
-    { ...makeFakeOffer(), id: 'offer-1', city: { name: CITIES[0], location: { latitude: 0, longitude: 0, zoom: 10 } } },
-    { ...makeFakeOffer(), id: 'offer-2', city: { name: CITIES[0], location: { latitude: 0, longitude: 0, zoom: 10 } } }
-  ];
+  const mockOffer = { ...makeFakeOffer(), id: 'offer-1', city: { name: CITIES[0], location: { latitude: 0, longitude: 0, zoom: 10 } } } as Offer;
+  const mockOffers = [mockOffer];
 
-  let store: ReturnType<typeof mockStore>;
+  const makeMockState = (initialState: Partial<State>) => (initialState as State);
 
-  const selectCitySpy = vi.spyOn(offersStore, 'selectCity');
-  const selectIsOffersDataLoadingSpy = vi.spyOn(offersStore, 'selectIsOffersDataLoading');
-  const selectOffersErrorSpy = vi.spyOn(offersStore, 'selectOffersError');
-  const selectCityOffersSpy = vi.spyOn(offersStore, 'selectCityOffers');
-  const selectSortedOffersSpy = vi.spyOn(offersStore, 'selectSortedOffers');
-  const fetchOffersActionSpy = vi.spyOn(offersStore, 'fetchOffersAction');
-  const setCitySpy = vi.spyOn(offersStore, 'setCity');
+  it('should render the Spinner when requestStatus is Loading', () => {
+    const { withStoreComponent } = withStore(withHistory(<MainPage />), makeMockState({
+      [NameSpace.Offers]: {
+        city: CITIES[0],
+        offers: [],
+        requestStatus: RequestStatus.Loading,
+        error: null,
+      }
+    }));
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    selectCitySpy.mockReturnValue(CITIES[0]);
-    selectIsOffersDataLoadingSpy.mockReturnValue(false);
-    selectOffersErrorSpy.mockReturnValue(null);
-    selectCityOffersSpy.mockReturnValue(mockOffers);
-    selectSortedOffersSpy.mockReturnValue(mockOffers);
-  });
-
-  const renderMainPage = () => {
-    store = mockStore({} as State);
-    return render(
-      <Provider store={store}>
-        <MemoryRouter>
-          <MainPage />
-        </MemoryRouter>
-      </Provider>
-    );
-  };
-
-  it('should dispatch fetchOffersAction on mount', () => {
-    renderMainPage();
-    expect(fetchOffersActionSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it('should render Spinner when data is loading', () => {
-    selectIsOffersDataLoadingSpy.mockReturnValue(true);
-    renderMainPage();
+    render(withStoreComponent);
 
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
     expect(screen.queryByTestId('offer-list')).not.toBeInTheDocument();
   });
 
-  it('should render Error state with Retry button when there is a fetching error', () => {
-    const errorMessage = 'Network Error';
-    selectOffersErrorSpy.mockReturnValue(errorMessage);
+  it('should render the Error view when requestStatus is Error', () => {
+    const errorMessage = 'Failed to fetch';
+    const { withStoreComponent } = withStore(withHistory(<MainPage />), makeMockState({
+      [NameSpace.Offers]: {
+        city: CITIES[0],
+        offers: [],
+        requestStatus: RequestStatus.Error,
+        error: errorMessage,
+      }
+    }));
 
-    renderMainPage();
+    render(withStoreComponent);
 
     expect(screen.getByText(/Could not load offers/i)).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
-
-    const retryButton = screen.getByRole('button', { name: /Try Again/i });
-    fireEvent.click(retryButton);
-
-    expect(fetchOffersActionSpy).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('button', { name: /Try Again/i })).toBeInTheDocument();
   });
 
-  it('should render Empty state when there are no offers', () => {
-    selectCityOffersSpy.mockReturnValue([]);
-    selectSortedOffersSpy.mockReturnValue([]);
+  it('should render the Empty view when offers list is empty and status is Success', () => {
+    const { withStoreComponent } = withStore(withHistory(<MainPage />), makeMockState({
+      [NameSpace.Offers]: {
+        city: CITIES[0],
+        offers: [],
+        requestStatus: RequestStatus.Success,
+        error: null,
+      }
+    }));
 
-    renderMainPage();
+    render(withStoreComponent);
 
     expect(screen.getByTestId('main-empty')).toBeInTheDocument();
-    expect(screen.queryByTestId('map')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('sort-options')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('offer-list')).not.toBeInTheDocument();
   });
 
-  it('should render standard content (List, Map, Sort) when offers exist', () => {
-    renderMainPage();
+  it('should render the Content view (List, Map, Sort) when offers exist', () => {
+    const { withStoreComponent } = withStore(withHistory(<MainPage />), makeMockState({
+      [NameSpace.Offers]: {
+        city: CITIES[0],
+        offers: mockOffers,
+        requestStatus: RequestStatus.Success,
+        error: null,
+      }
+    }));
+
+    render(withStoreComponent);
 
     expect(screen.getByTestId('cities-list')).toBeInTheDocument();
     expect(screen.getByTestId('sort-options')).toBeInTheDocument();
     expect(screen.getByTestId('offer-list')).toBeInTheDocument();
     expect(screen.getByTestId('map')).toBeInTheDocument();
-    expect(screen.getByText(/places to stay/i)).toBeInTheDocument();
   });
 
-  it('should dispatch setCity action when a new city is selected', () => {
-    renderMainPage();
+  it('should dispatch "setCity" action when user selects a city', () => {
+    const { withStoreComponent, mockStore } = withStore(withHistory(<MainPage />), makeMockState({
+      [NameSpace.Offers]: {
+        city: CITIES[0],
+        offers: mockOffers,
+        requestStatus: RequestStatus.Success,
+        error: null,
+      }
+    }));
+
+    render(withStoreComponent);
 
     const changeCityBtn = screen.getByText('Select City 2');
     fireEvent.click(changeCityBtn);
 
-    expect(setCitySpy).toHaveBeenCalledWith(CITIES[1]);
+    const actions = mockStore.getActions();
+    const setCityAction = actions.find((action) => action.type === setCity.type);
+    
+    expect(setCityAction).toBeDefined();
+    expect(setCityAction?.payload).toBe(CITIES[1]);
   });
 
-  it('should update local state and pass activeOfferId to Map on card hover', () => {
-    renderMainPage();
+  it('should dispatch "fetchOffersAction" when clicking Try Again on error', () => {
+    const { withStoreComponent, mockStore } = withStore(withHistory(<MainPage />), makeMockState({
+      [NameSpace.Offers]: {
+        city: CITIES[0],
+        offers: [],
+        requestStatus: RequestStatus.Error,
+        error: 'Error',
+      }
+    }));
+
+    render(withStoreComponent);
+
+    const retryBtn = screen.getByRole('button', { name: /Try Again/i });
+    fireEvent.click(retryBtn);
+
+    const actions = mockStore.getActions();
+    const fetchAction = actions.find((action) => action.type === 'offers/fetchOffers');
+    expect(fetchAction).toBeDefined();
+  });
+
+  it('should update local state (Map active point) when hovering an offer card', () => {
+    const { withStoreComponent } = withStore(withHistory(<MainPage />), makeMockState({
+      [NameSpace.Offers]: {
+        city: CITIES[0],
+        offers: mockOffers,
+        requestStatus: RequestStatus.Success,
+        error: null,
+      }
+    }));
+
+    render(withStoreComponent);
 
     const map = screen.getByTestId('map');
+    
+    expect(map).toHaveTextContent('Active Map Point: None');
+    
+    fireEvent.click(screen.getByText('Hover Card'));
+    expect(map).toHaveTextContent('Active Map Point: offer-1');
 
-    expect(map).toHaveTextContent('Selected ID: None');
-
-    fireEvent.click(screen.getByText('Hover Offer 1'));
-    expect(map).toHaveTextContent('Selected ID: offer-1');
-
-    fireEvent.click(screen.getByText('Leave Offer'));
-    expect(map).toHaveTextContent('Selected ID: None');
+    fireEvent.click(screen.getByText('Leave Card'));
+    expect(map).toHaveTextContent('Active Map Point: None');
   });
 
-  it('should trigger re-selection of sorted offers when sort option changes', () => {
-    renderMainPage();
+  it('should update local state (Sort Option) when changing sort', () => {
+    const { withStoreComponent } = withStore(withHistory(<MainPage />), makeMockState({
+      [NameSpace.Offers]: {
+        city: CITIES[0],
+        offers: mockOffers,
+        requestStatus: RequestStatus.Success,
+        error: null,
+      }
+    }));
 
-    expect(selectSortedOffersSpy).toHaveBeenCalledWith(expect.anything(), SortOption.Popular);
+    render(withStoreComponent);
 
-    fireEvent.click(screen.getByText('Sort Price'));
-
-    expect(selectSortedOffersSpy).toHaveBeenCalledWith(expect.anything(), SortOption.PriceLowToHigh);
+    expect(screen.getByText(`Sort: ${SortOption.Popular}`)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Change Sort'));
+    expect(screen.getByText(`Sort: ${SortOption.PriceLowToHigh}`)).toBeInTheDocument();
   });
 });

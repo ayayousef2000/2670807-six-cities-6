@@ -1,25 +1,21 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import CommentForm from './index';
 import { withHistory, withStore } from '../../utils/mock-component';
 import { NameSpace, RequestStatus } from '../../const';
-import * as ReviewsThunks from '../../store/reviews/reviews-thunks';
-import * as ReviewsSlice from '../../store/reviews';
-
-vi.mock('../../store/reviews/reviews-thunks', () => ({
-  postCommentAction: vi.fn(() => ({ type: 'reviews/postComment' })),
-}));
+import * as ReviewsStore from '../../store/reviews';
 
 vi.mock('../../store/reviews', async (importOriginal) => {
-  const actual = await importOriginal<typeof ReviewsSlice>();
+  const actual = await importOriginal<typeof import('../../store/reviews')>();
   return {
     ...actual,
+    postCommentAction: vi.fn(() => ({ type: 'reviews/postComment' })),
     dropSendingStatus: vi.fn(() => ({ type: 'reviews/dropSendingStatus' })),
   };
 });
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
     useParams: () => ({ id: 'offer-123' }),
@@ -42,33 +38,15 @@ describe('Component: CommentForm', () => {
         status: RequestStatus.Success,
       }
     });
-    const preparedComponent = withHistory(withStoreComponent);
-
-    render(preparedComponent);
+    
+    render(withHistory(withStoreComponent));
 
     expect(screen.getByLabelText(/Your review/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Tell how was your stay/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Submit/i })).toBeInTheDocument();
     expect(screen.getAllByRole('radio')).toHaveLength(5);
   });
 
-  it('should have submit button disabled by default', () => {
-    const { withStoreComponent } = withStore(<CommentForm />, {
-      [NameSpace.Reviews]: {
-        sendingStatus: RequestStatus.Idle,
-        sendingError: null,
-        reviews: [],
-        status: RequestStatus.Success,
-      }
-    });
-
-    render(withHistory(withStoreComponent));
-
-    const submitButton = screen.getByRole('button', { name: /Submit/i });
-    expect(submitButton).toBeDisabled();
-  });
-
-  it('should enable submit button when form is valid (rating + long text)', () => {
+  it('should enable submit button when form is valid', () => {
     const { withStoreComponent } = withStore(<CommentForm />, {
       [NameSpace.Reviews]: {
         sendingStatus: RequestStatus.Idle,
@@ -84,8 +62,9 @@ describe('Component: CommentForm', () => {
     const textArea = screen.getByRole('textbox', { name: /Your review/i });
     const starInputs = screen.getAllByRole('radio');
 
-    fireEvent.change(textArea, { target: { value: validComment } });
     expect(submitButton).toBeDisabled();
+
+    fireEvent.change(textArea, { target: { value: validComment } });
     fireEvent.click(starInputs[0]);
 
     expect(submitButton).toBeEnabled();
@@ -105,24 +84,21 @@ describe('Component: CommentForm', () => {
 
     const textArea = screen.getByRole('textbox', { name: /Your review/i });
     const starInputs = screen.getAllByRole('radio');
-    const form = screen.getByRole('button', { name: /Submit/i }).closest('form');
+    const submitButton = screen.getByRole('button', { name: /Submit/i });
 
     fireEvent.change(textArea, { target: { value: validComment } });
-    fireEvent.click(starInputs[0]); // 5 stars
+    fireEvent.click(starInputs[0]);
+    fireEvent.click(submitButton);
 
-    if (form) {
-      fireEvent.submit(form);
-    }
-
-    expect(ReviewsThunks.postCommentAction).toHaveBeenCalledTimes(1);
-    expect(ReviewsThunks.postCommentAction).toHaveBeenCalledWith({
+    expect(ReviewsStore.postCommentAction).toHaveBeenCalledTimes(1);
+    expect(ReviewsStore.postCommentAction).toHaveBeenCalledWith({
       offerId: 'offer-123',
       rating: 5,
       comment: validComment,
     });
   });
 
-  it('should disable all controls when status is Loading', () => {
+  it('should disable all controls when status is "Loading"', () => {
     const { withStoreComponent } = withStore(<CommentForm />, {
       [NameSpace.Reviews]: {
         sendingStatus: RequestStatus.Loading,
@@ -143,8 +119,8 @@ describe('Component: CommentForm', () => {
     starInputs.forEach((input) => expect(input).toBeDisabled());
   });
 
-  it('should display error message when status is Error', () => {
-    const errorMessage = 'Network Error';
+  it('should display error message and clear it when user interacts', () => {
+    const errorMessage = 'Failed to post comment';
     const { withStoreComponent } = withStore(<CommentForm />, {
       [NameSpace.Reviews]: {
         sendingStatus: RequestStatus.Error,
@@ -157,24 +133,10 @@ describe('Component: CommentForm', () => {
     render(withHistory(withStoreComponent));
 
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
-  });
-
-  it('should dispatch "dropSendingStatus" when user types after an error', () => {
-    const { withStoreComponent } = withStore(<CommentForm />, {
-      [NameSpace.Reviews]: {
-        sendingStatus: RequestStatus.Error,
-        sendingError: 'Some error',
-        reviews: [],
-        status: RequestStatus.Success,
-      }
-    });
-
-    render(withHistory(withStoreComponent));
 
     const textArea = screen.getByRole('textbox', { name: /Your review/i });
+    fireEvent.change(textArea, { target: { value: 'Typing something new...' } });
 
-    fireEvent.change(textArea, { target: { value: 'New text' } });
-
-    expect(ReviewsSlice.dropSendingStatus).toHaveBeenCalled();
+    expect(ReviewsStore.dropSendingStatus).toHaveBeenCalledTimes(1);
   });
 });

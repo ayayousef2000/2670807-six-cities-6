@@ -68,7 +68,7 @@ describe('Hook: useFavoriteAction', () => {
     expect(mockDispatch).not.toHaveBeenCalled();
   });
 
-  it('should dispatch changeFavoriteStatusAction with status 1 if not favorite', async () => {
+  it('should dispatch "changeFavoriteStatusAction" with status 1 if not favorite', async () => {
     (ReduxHooks.useAppSelector as Mock).mockReturnValue(AuthorizationStatus.Auth);
     const mockId = 'offer-123';
 
@@ -93,7 +93,7 @@ describe('Hook: useFavoriteAction', () => {
     });
   });
 
-  it('should dispatch changeFavoriteStatusAction with status 0 if favorite', async () => {
+  it('should dispatch "changeFavoriteStatusAction" with status 0 if favorite', async () => {
     (ReduxHooks.useAppSelector as Mock).mockReturnValue(AuthorizationStatus.Auth);
     const mockId = 'offer-456';
 

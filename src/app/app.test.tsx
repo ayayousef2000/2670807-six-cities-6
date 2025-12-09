@@ -5,11 +5,11 @@ import { AuthorizationStatus, NameSpace, RequestStatus } from '../const';
 import { checkAuthAction } from '../store/user';
 
 vi.mock('../components/spinner', () => ({
-  default: () => <div data-testid="spinner">Spinner</div>
+  default: () => <div data-testid="spinner-component">Spinner Component</div>
 }));
 
 vi.mock('./app-router', () => ({
-  AppRouter: () => <div data-testid="app-router">App Router</div>
+  AppRouter: () => <div data-testid="app-router-component">App Router Component</div>
 }));
 
 describe('Component: App', () => {
@@ -24,8 +24,8 @@ describe('Component: App', () => {
 
     render(withStoreComponent);
 
-    expect(screen.getByTestId('spinner')).toBeInTheDocument();
-    expect(screen.queryByTestId('app-router')).not.toBeInTheDocument();
+    expect(screen.getByTestId('spinner-component')).toBeInTheDocument();
+    expect(screen.queryByTestId('app-router-component')).not.toBeInTheDocument();
   });
 
   it('should render "AppRouter" when authorization status is "Auth"', () => {
@@ -39,8 +39,8 @@ describe('Component: App', () => {
 
     render(withStoreComponent);
 
-    expect(screen.getByTestId('app-router')).toBeInTheDocument();
-    expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
+    expect(screen.getByTestId('app-router-component')).toBeInTheDocument();
+    expect(screen.queryByTestId('spinner-component')).not.toBeInTheDocument();
   });
 
   it('should render "AppRouter" when authorization status is "NoAuth"', () => {
@@ -54,8 +54,8 @@ describe('Component: App', () => {
 
     render(withStoreComponent);
 
-    expect(screen.getByTestId('app-router')).toBeInTheDocument();
-    expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
+    expect(screen.getByTestId('app-router-component')).toBeInTheDocument();
+    expect(screen.queryByTestId('spinner-component')).not.toBeInTheDocument();
   });
 
   it('should dispatch "checkAuthAction" when the app is initialized', () => {
@@ -70,10 +70,11 @@ describe('Component: App', () => {
     render(withStoreComponent);
 
     const actions = mockStore.getActions();
-    const isCheckAuthActionDispatched = actions.some(
-      (action) => action.type === checkAuthAction.pending.type
-    );
-
-    expect(isCheckAuthActionDispatched).toBe(true);
+    
+    expect(actions).toEqual([
+      expect.objectContaining({
+        type: checkAuthAction.pending.type,
+      })
+    ]);
   });
 });
