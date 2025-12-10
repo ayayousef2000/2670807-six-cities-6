@@ -87,7 +87,7 @@ describe('Page: FavoritesPage', () => {
 
   it('should render FavoritesList when favorites exist', () => {
     const fakeOffer = makeFakeOffer(true);
-    
+
     const { withStoreComponent } = withStore(withHistory(<FavoritesPage />), {
       [NameSpace.Favorites]: {
         favorites: [fakeOffer],

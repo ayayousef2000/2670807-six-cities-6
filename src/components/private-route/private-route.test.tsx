@@ -16,7 +16,7 @@ describe('Component: PrivateRoute', () => {
         <span>Private Content</span>
       </PrivateRoute>
     );
-    
+
     const { withStoreComponent } = withStore(component, {
       [NameSpace.User]: {
         authorizationStatus: AuthorizationStatus.Unknown,
@@ -37,7 +37,7 @@ describe('Component: PrivateRoute', () => {
         <span>Private Content</span>
       </PrivateRoute>
     );
-    
+
     const { withStoreComponent } = withStore(component, {
       [NameSpace.User]: {
         authorizationStatus: AuthorizationStatus.Auth,
@@ -67,7 +67,7 @@ describe('Component: PrivateRoute', () => {
       </Routes>,
       ['/private']
     );
-    
+
     const { withStoreComponent } = withStore(component, {
       [NameSpace.User]: {
         authorizationStatus: AuthorizationStatus.NoAuth,

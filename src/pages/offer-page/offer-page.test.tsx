@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { Action } from 'redux';
 import OfferPage from './index';
 import { AuthorizationStatus, RequestStatus, NameSpace } from '../../const';
 import { withStore } from '../../utils/mock-component';
@@ -41,7 +42,7 @@ vi.mock('../../store/offer', async () => {
   const actual = await vi.importActual<typeof import('../../store/offer')>('../../store/offer');
   return {
     ...actual,
-    fetchOfferAction: vi.fn((id) => ({ type: 'offer/fetch', payload: id })),
+    fetchOfferAction: vi.fn((id: string) => ({ type: 'offer/fetch', payload: id })),
     dropOffer: vi.fn(() => ({ type: 'offer/drop' })),
   };
 });
@@ -50,7 +51,7 @@ vi.mock('../../store/reviews', async () => {
   const actual = await vi.importActual<typeof import('../../store/reviews')>('../../store/reviews');
   return {
     ...actual,
-    fetchReviewsAction: vi.fn((id) => ({ type: 'reviews/fetch', payload: id })),
+    fetchReviewsAction: vi.fn((id: string) => ({ type: 'reviews/fetch', payload: id })),
     dropReviews: vi.fn(() => ({ type: 'reviews/drop' })),
   };
 });
@@ -59,13 +60,13 @@ vi.mock('../../store/near-places', async () => {
   const actual = await vi.importActual<typeof import('../../store/near-places')>('../../store/near-places');
   return {
     ...actual,
-    fetchNearPlacesAction: vi.fn((id) => ({ type: 'nearPlaces/fetch', payload: id })),
+    fetchNearPlacesAction: vi.fn((id: string) => ({ type: 'nearPlaces/fetch', payload: id })),
     dropNearPlaces: vi.fn(() => ({ type: 'nearPlaces/drop' })),
   };
 });
 
 describe('Page: OfferPage', () => {
-  
+
   const makeMockState = (overrides: Partial<State> = {}) => {
     const defaultState = {
       [NameSpace.Offer]: {
@@ -108,7 +109,7 @@ describe('Page: OfferPage', () => {
 
     render(withStoreComponent);
 
-    const actions = mockStore.getActions().map((action) => action.type);
+    const actions = mockStore.getActions().map((action: Action<string>) => action.type);
 
     expect(actions).toContain('offer/fetch');
     expect(actions).toContain('reviews/fetch');
@@ -121,10 +122,10 @@ describe('Page: OfferPage', () => {
     }));
 
     const { unmount } = render(withStoreComponent);
-    
+
     unmount();
 
-    const actions = mockStore.getActions().map((action) => action.type);
+    const actions = mockStore.getActions().map((action: Action<string>) => action.type);
     expect(actions).toContain('offer/drop');
     expect(actions).toContain('reviews/drop');
     expect(actions).toContain('nearPlaces/drop');
@@ -187,7 +188,7 @@ describe('Page: OfferPage', () => {
 
     expect(screen.getByText('Premium')).toBeInTheDocument();
     expect(screen.getByText('€500')).toBeInTheDocument();
-    
+
     const images = screen.getAllByRole('img', { name: 'Luxury Villa' });
     expect(images).toHaveLength(6);
 
@@ -249,7 +250,7 @@ describe('Page: OfferPage', () => {
     fireEvent.click(retryButtons[0]);
     fireEvent.click(retryButtons[1]);
 
-    const actions = mockStore.getActions().map((a) => a.type);
+    const actions = mockStore.getActions().map((a: Action<string>) => a.type);
     expect(actions).toContain('reviews/fetch');
     expect(actions).toContain('nearPlaces/fetch');
   });

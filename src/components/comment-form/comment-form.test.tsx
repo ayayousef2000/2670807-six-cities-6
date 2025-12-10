@@ -38,7 +38,7 @@ describe('Component: CommentForm', () => {
         status: RequestStatus.Success,
       }
     });
-    
+
     render(withHistory(withStoreComponent));
 
     expect(screen.getByLabelText(/Your review/i)).toBeInTheDocument();

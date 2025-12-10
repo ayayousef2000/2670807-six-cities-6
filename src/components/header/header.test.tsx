@@ -68,7 +68,7 @@ describe('Component: Header', () => {
     await userEvent.click(signOutLink);
 
     const actions = mockStore.getActions();
-    
+
     expect(actions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

@@ -70,7 +70,7 @@ describe('Component: App', () => {
     render(withStoreComponent);
 
     const actions = mockStore.getActions();
-    
+
     expect(actions).toEqual([
       expect.objectContaining({
         type: checkAuthAction.pending.type,

@@ -9,7 +9,7 @@ import { Offer } from '../../types/offer';
 import { State } from '../../types/state';
 
 vi.mock('../../components/cities-list', () => ({
-  default: ({ onCityChange, currentCity }: { onCityChange: (city: string) => void, currentCity: string }) => (
+  default: ({ onCityChange, currentCity }: { onCityChange: (city: string) => void; currentCity: string }) => (
     <div data-testid="cities-list">
       <span>Active: {currentCity}</span>
       <button onClick={() => onCityChange(CITIES[1])}>Select City 2</button>
@@ -153,7 +153,7 @@ describe('Page: MainPage', () => {
 
     const actions = mockStore.getActions();
     const setCityAction = actions.find((action) => action.type === setCity.type);
-    
+
     expect(setCityAction).toBeDefined();
     expect(setCityAction?.payload).toBe(CITIES[1]);
   });
@@ -191,9 +191,9 @@ describe('Page: MainPage', () => {
     render(withStoreComponent);
 
     const map = screen.getByTestId('map');
-    
+
     expect(map).toHaveTextContent('Active Map Point: None');
-    
+
     fireEvent.click(screen.getByText('Hover Card'));
     expect(map).toHaveTextContent('Active Map Point: offer-1');
 

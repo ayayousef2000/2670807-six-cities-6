@@ -3,26 +3,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Map } from 'leaflet';
 import useMap from './use-map';
 import { makeFakeCity } from '../utils/mocks';
-import { City } from '../types/offer';
 
-vi.mock('leaflet', () => {
-  const mapInstance = {
+vi.mock('leaflet', () => ({
+  Map: vi.fn().mockImplementation(() => ({
     addLayer: vi.fn(),
     setView: vi.fn(),
     remove: vi.fn(),
-  };
-  return {
-    Map: vi.fn(() => mapInstance),
-    TileLayer: vi.fn(),
-  };
-});
+  })),
+  TileLayer: vi.fn(),
+}));
 
 describe('Hook: useMap', () => {
   const mockCity = makeFakeCity();
   const mockCity2 = makeFakeCity();
-  const mapRef = {
-    current: document.createElement('div'),
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,7 +28,8 @@ describe('Hook: useMap', () => {
     expect(result.current).toBeNull();
   });
 
-  it('should initialize the map when mapRef is valid', () => {
+  it('should initialize the map instance when mapRef is valid', () => {
+    const mapRef = { current: document.createElement('div') };
     const { result } = renderHook(() => useMap(mapRef, mockCity));
 
     expect(Map).toHaveBeenCalledTimes(1);
@@ -46,12 +40,16 @@ describe('Hook: useMap', () => {
       },
       zoom: mockCity.location.zoom,
     });
+
     expect(result.current).not.toBeNull();
+    expect(result.current?.addLayer).toHaveBeenCalled();
   });
 
-  it('should update the view when the city changes', () => {
+  it('should update the map view when the city changes', () => {
+    const mapRef = { current: document.createElement('div') };
+
     const { result, rerender } = renderHook(
-      ({ city }: { city: City }) => useMap(mapRef, city),
+      ({ city }) => useMap(mapRef, city),
       {
         initialProps: { city: mockCity },
       }
@@ -59,8 +57,11 @@ describe('Hook: useMap', () => {
 
     const mapInstance = result.current;
 
+    vi.clearAllMocks();
+
     rerender({ city: mockCity2 });
 
+    expect(mapInstance?.setView).toHaveBeenCalledTimes(1);
     expect(mapInstance?.setView).toHaveBeenCalledWith(
       {
         lat: mockCity2.location.latitude,

@@ -119,11 +119,11 @@ describe('Component: OfferCard', () => {
   it('should call onMouseEnter with offer ID when mouse enters', () => {
     const mockOffer = makeFakeOffer();
     const handleMouseEnter = vi.fn();
-    
+
     const preparedComponent = withHistory(
-      <OfferCard 
-        offer={mockOffer} 
-        onMouseEnter={handleMouseEnter} 
+      <OfferCard
+        offer={mockOffer}
+        onMouseEnter={handleMouseEnter}
       />
     );
 
@@ -138,11 +138,11 @@ describe('Component: OfferCard', () => {
   it('should call onMouseLeave when mouse leaves', () => {
     const mockOffer = makeFakeOffer();
     const handleMouseLeave = vi.fn();
-    
+
     const preparedComponent = withHistory(
-      <OfferCard 
-        offer={mockOffer} 
-        onMouseLeave={handleMouseLeave} 
+      <OfferCard
+        offer={mockOffer}
+        onMouseLeave={handleMouseLeave}
       />
     );
 

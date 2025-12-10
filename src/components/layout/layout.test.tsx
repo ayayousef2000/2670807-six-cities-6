@@ -11,7 +11,7 @@ vi.mock('../header', () => ({
 describe('Component: Layout', () => {
   it('should render Header and Outlet content', () => {
     const expectedContent = 'Content from Outlet';
-    
+
     const componentWithRouting = withHistory(
       <Routes>
         <Route path={AppRoute.Main} element={<Layout />}>
@@ -32,7 +32,7 @@ describe('Component: Layout', () => {
     render(component);
 
     const layoutWrapper = screen.getByTestId('header-mock').parentElement;
-    
+
     expect(layoutWrapper).toHaveClass('page', 'page--gray', 'page--main');
   });
 
@@ -42,7 +42,7 @@ describe('Component: Layout', () => {
     render(component);
 
     const layoutWrapper = screen.getByTestId('header-mock').parentElement;
-    
+
     expect(layoutWrapper).toHaveClass('page');
     expect(layoutWrapper).not.toHaveClass('page--gray');
     expect(layoutWrapper).not.toHaveClass('page--main');

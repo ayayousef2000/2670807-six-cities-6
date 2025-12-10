@@ -59,7 +59,7 @@ describe('Component: FavoritesList', () => {
     fireEvent.click(cityLink);
 
     const actions = mockStore.getActions();
-    
+
     expect(actions).toHaveLength(1);
     expect(actions[0].type).toBe(setCity.type);
     expect(actions[0].payload).toBe(targetCity);

@@ -60,7 +60,7 @@ describe('Component: SortOptions', () => {
     fireEvent.click(optionToSelect);
 
     expect(onSortChange).toHaveBeenCalledWith(SortOption.PriceHighToLow);
-    
+
     const optionsList = container.querySelector('.places__options');
     expect(optionsList).not.toHaveClass('places__options--opened');
   });

@@ -6,13 +6,16 @@ import { AuthorizationStatus } from '../const';
 import { makeFakeOffer } from '../utils/mocks';
 import * as ReduxHooks from './index';
 
-const mockNavigate = vi.fn();
+const { mockNavigate } = vi.hoisted(() => ({
+  mockNavigate: vi.fn(),
+}));
+
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
 vi.mock('../store/favorites/favorites-thunks', () => ({
-  changeFavoriteStatusAction: vi.fn((payload: { offerId: string; status: number }) => ({
+  changeFavoriteStatusAction: vi.fn((payload: unknown) => ({
     type: 'favorites/changeStatus',
     payload,
   })),
@@ -25,12 +28,9 @@ vi.mock('./index', () => ({
 
 describe('Hook: useFavorites', () => {
   it('should group offers by city', () => {
-    const offer1 = makeFakeOffer();
-    offer1.city.name = 'Paris';
-    const offer2 = makeFakeOffer();
-    offer2.city.name = 'Paris';
-    const offer3 = makeFakeOffer();
-    offer3.city.name = 'Berlin';
+    const offer1 = { ...makeFakeOffer(), city: { ...makeFakeOffer().city, name: 'Paris' } };
+    const offer2 = { ...makeFakeOffer(), city: { ...makeFakeOffer().city, name: 'Paris' } };
+    const offer3 = { ...makeFakeOffer(), city: { ...makeFakeOffer().city, name: 'Berlin' } };
 
     const { result } = renderHook(() => useFavorites([offer1, offer2, offer3]));
     const { favoritesByCity } = result.current;
@@ -41,7 +41,7 @@ describe('Hook: useFavorites', () => {
     expect(favoritesByCity['Paris']).toEqual([offer1, offer2]);
   });
 
-  it('should return empty object if no offers provided', () => {
+  it('should return an empty object if no offers are provided', () => {
     const { result } = renderHook(() => useFavorites([]));
     expect(result.current.favoritesByCity).toEqual({});
   });
@@ -68,13 +68,11 @@ describe('Hook: useFavoriteAction', () => {
     expect(mockDispatch).not.toHaveBeenCalled();
   });
 
-  it('should dispatch "changeFavoriteStatusAction" with status 1 if not favorite', async () => {
+  it('should dispatch changeFavoriteStatusAction with status 1 if not favorite', async () => {
     (ReduxHooks.useAppSelector as Mock).mockReturnValue(AuthorizationStatus.Auth);
     const mockId = 'offer-123';
 
-    const { result } = renderHook(() =>
-      useFavoriteAction(mockId, false)
-    );
+    const { result } = renderHook(() => useFavoriteAction(mockId, false));
 
     act(() => {
       result.current.handleFavoriteClick();
@@ -93,13 +91,11 @@ describe('Hook: useFavoriteAction', () => {
     });
   });
 
-  it('should dispatch "changeFavoriteStatusAction" with status 0 if favorite', async () => {
+  it('should dispatch changeFavoriteStatusAction with status 0 if favorite', async () => {
     (ReduxHooks.useAppSelector as Mock).mockReturnValue(AuthorizationStatus.Auth);
     const mockId = 'offer-456';
 
-    const { result } = renderHook(() =>
-      useFavoriteAction(mockId, true)
-    );
+    const { result } = renderHook(() => useFavoriteAction(mockId, true));
 
     act(() => {
       result.current.handleFavoriteClick();
@@ -111,6 +107,41 @@ describe('Hook: useFavoriteAction', () => {
           payload: { offerId: mockId, status: 0 },
         })
       );
+    });
+  });
+
+  it('should prevent duplicate dispatches while a request is already submitting', async () => {
+    (ReduxHooks.useAppSelector as Mock).mockReturnValue(AuthorizationStatus.Auth);
+
+    let resolveDispatch: (value: void | PromiseLike<void>) => void;
+    const pendingPromise = new Promise<void>((resolve) => {
+      resolveDispatch = resolve;
+    });
+    mockDispatch.mockReturnValue(pendingPromise);
+
+    const { result } = renderHook(() => useFavoriteAction('offer-1', false));
+
+    act(() => {
+      result.current.handleFavoriteClick();
+    });
+
+    expect(result.current.isFavoriteSubmitting).toBe(true);
+    expect(mockDispatch).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      result.current.handleFavoriteClick();
+    });
+
+    expect(mockDispatch).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      if (resolveDispatch) {
+        resolveDispatch();
+      }
+    });
+
+    await waitFor(() => {
+      expect(result.current.isFavoriteSubmitting).toBe(false);
     });
   });
 });

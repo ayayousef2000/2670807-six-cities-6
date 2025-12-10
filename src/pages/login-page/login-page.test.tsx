@@ -12,10 +12,10 @@ vi.mock('../../components/login-form', () => ({
 }));
 
 describe('Page: LoginPage', () => {
-  
+
   it('should render correctly when user is NOT authorized', () => {
     const { withStoreComponent } = withStore(
-      withHistory(<LoginPage />), 
+      withHistory(<LoginPage />),
       {
         [NameSpace.User]: {
           authorizationStatus: AuthorizationStatus.NoAuth,
@@ -44,7 +44,7 @@ describe('Page: LoginPage', () => {
     );
 
     const { withStoreComponent } = withStore(
-      withHistory(componentWithRouting, [AppRoute.Login]), 
+      withHistory(componentWithRouting, [AppRoute.Login]),
       {
         [NameSpace.User]: {
           authorizationStatus: AuthorizationStatus.Auth,
@@ -62,7 +62,7 @@ describe('Page: LoginPage', () => {
 
   it('should dispatch "setCity" action when clicking the random city link', () => {
     const { withStoreComponent, mockStore } = withStore(
-      withHistory(<LoginPage />), 
+      withHistory(<LoginPage />),
       {
         [NameSpace.User]: {
           authorizationStatus: AuthorizationStatus.NoAuth,
@@ -80,7 +80,7 @@ describe('Page: LoginPage', () => {
     fireEvent.click(cityLink);
 
     const actions = mockStore.getActions();
-    
+
     expect(actions).toHaveLength(1);
     expect(actions[0].type).toBe(setCity.type);
     expect(actions[0].payload).toBe(renderedCityName);

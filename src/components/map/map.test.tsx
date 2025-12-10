@@ -15,18 +15,16 @@ const mockMarkerInstance = {
   setZIndexOffset: vi.fn(),
 };
 
-vi.mock('leaflet', () => {
-  return {
-    Icon: vi.fn(),
-    Marker: vi.fn(() => mockMarkerInstance),
-    layerGroup: vi.fn(() => mockLayerGroupInstance),
-    TileLayer: vi.fn(),
-    Map: vi.fn(),
-  };
-});
+vi.mock('leaflet', () => ({
+  Icon: vi.fn(),
+  Marker: vi.fn(() => mockMarkerInstance),
+  layerGroup: vi.fn(() => mockLayerGroupInstance),
+  TileLayer: vi.fn(),
+  Map: vi.fn(),
+}));
 
 vi.mock('../../hooks/use-map', () => ({
-  default: vi.fn().mockReturnValue({}), 
+  default: vi.fn().mockReturnValue({}),
 }));
 
 describe('Component: Map', () => {
@@ -65,7 +63,7 @@ describe('Component: Map', () => {
 
     expect(layerGroup).toHaveBeenCalled();
     expect(mockLayerGroupInstance.addTo).toHaveBeenCalled();
-    
+
     expect(Marker).toHaveBeenCalledTimes(mockPoints.length);
     expect(mockMarkerInstance.addTo).toHaveBeenCalledTimes(mockPoints.length);
     expect(mockMarkerInstance.addTo).toHaveBeenCalledWith(mockLayerGroupInstance);
@@ -81,7 +79,7 @@ describe('Component: Map', () => {
     );
 
     expect(mockMarkerInstance.setIcon).toHaveBeenCalledTimes(mockPoints.length);
-    
+
     expect(mockMarkerInstance.setZIndexOffset).toHaveBeenCalledTimes(1);
     expect(mockMarkerInstance.setZIndexOffset).toHaveBeenCalledWith(1000);
   });

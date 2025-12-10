@@ -28,11 +28,11 @@ describe('Component: UserAuth', () => {
 
     expect(screen.getByText('test@test.com')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
-    
+
     const avatar = screen.getByAltText('Test User');
     expect(avatar).toBeInTheDocument();
     expect(avatar).toHaveAttribute('src', 'img/test-avatar.jpg');
-    
+
     expect(screen.getByText('Sign out')).toBeInTheDocument();
   });
 
