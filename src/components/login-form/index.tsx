@@ -38,8 +38,9 @@ function LoginForm(): JSX.Element {
 
     dispatch(loginAction({ login: email, password }))
       .unwrap()
-      .catch((error: string) => {
-        setErrorMessage(error || 'Failed to login');
+      .catch((error: unknown) => {
+        const message = typeof error === 'string' ? error : 'Failed to login';
+        setErrorMessage(message);
         setIsSubmitting(false);
       });
   }, [dispatch, email, password]);
@@ -84,7 +85,7 @@ function LoginForm(): JSX.Element {
         </div>
 
         {errorMessage && (
-          <div className="login__error-message">
+          <div className="login__error-message" data-testid="login-error">
             {errorMessage.split('\n').map((msg) => (
               <span key={msg}>{msg}</span>
             ))}
