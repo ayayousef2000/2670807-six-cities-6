@@ -30,11 +30,11 @@ export const selectSortedOffers = createSelector(
   (cityOffers, sortType) => {
     switch (sortType) {
       case SortOption.PriceLowToHigh:
-        return cityOffers.toSorted((a: Offer, b: Offer) => a.price - b.price);
+        return [...cityOffers].sort((a: Offer, b: Offer) => a.price - b.price);
       case SortOption.PriceHighToLow:
-        return cityOffers.toSorted((a: Offer, b: Offer) => b.price - a.price);
+        return [...cityOffers].sort((a: Offer, b: Offer) => b.price - a.price);
       case SortOption.TopRatedFirst:
-        return cityOffers.toSorted((a: Offer, b: Offer) => b.rating - a.rating);
+        return [...cityOffers].sort((a: Offer, b: Offer) => b.rating - a.rating);
       default:
         return cityOffers;
     }

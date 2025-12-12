@@ -1,17 +1,23 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import OfferCard from './index';
 import { withHistory } from '../../utils/mock-component';
 import { makeFakeOffer } from '../../utils/mocks';
 
+const handleFavoriteClickMock = vi.fn();
+
 vi.mock('../../hooks/use-favorites', () => ({
   useFavoriteAction: () => ({
-    handleFavoriteClick: vi.fn(),
+    handleFavoriteClick: handleFavoriteClickMock,
     isFavoriteSubmitting: false,
   }),
 }));
 
 describe('Component: OfferCard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('should render correct content for a standard card (not premium)', () => {
     const mockOffer = { ...makeFakeOffer(), isPremium: false };
     const expectedPriceText = `€${mockOffer.price}`;
@@ -62,6 +68,18 @@ describe('Component: OfferCard', () => {
     expect(iconSpan).toBeInTheDocument();
   });
 
+  it('should call handleFavoriteClick when favorite button is clicked', () => {
+    const mockOffer = makeFakeOffer();
+    const preparedComponent = withHistory(<OfferCard offer={mockOffer} />);
+
+    render(preparedComponent);
+
+    const button = screen.getByRole('button');
+    fireEvent.click(button);
+
+    expect(handleFavoriteClickMock).toHaveBeenCalledTimes(1);
+  });
+
   it('should render correctly for the "cities" variant (default)', () => {
     const mockOffer = makeFakeOffer();
     const preparedComponent = withHistory(<OfferCard offer={mockOffer} variant="cities" />);
@@ -96,5 +114,43 @@ describe('Component: OfferCard', () => {
     render(preparedComponent);
 
     expect(screen.getByRole('article')).toHaveClass('near-places__card');
+  });
+
+  it('should call onMouseEnter with offer ID when mouse enters', () => {
+    const mockOffer = makeFakeOffer();
+    const handleMouseEnter = vi.fn();
+
+    const preparedComponent = withHistory(
+      <OfferCard
+        offer={mockOffer}
+        onMouseEnter={handleMouseEnter}
+      />
+    );
+
+    render(preparedComponent);
+
+    const card = screen.getByRole('article');
+    fireEvent.mouseEnter(card);
+
+    expect(handleMouseEnter).toHaveBeenCalledWith(mockOffer.id);
+  });
+
+  it('should call onMouseLeave when mouse leaves', () => {
+    const mockOffer = makeFakeOffer();
+    const handleMouseLeave = vi.fn();
+
+    const preparedComponent = withHistory(
+      <OfferCard
+        offer={mockOffer}
+        onMouseLeave={handleMouseLeave}
+      />
+    );
+
+    render(preparedComponent);
+
+    const card = screen.getByRole('article');
+    fireEvent.mouseLeave(card);
+
+    expect(handleMouseLeave).toHaveBeenCalled();
   });
 });

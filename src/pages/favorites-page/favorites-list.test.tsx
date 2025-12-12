@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import FavoritesList from './favorites-list';
 import { withHistory, withStore } from '../../utils/mock-component';
 import { makeFakeOffer } from '../../utils/mocks';
 import { Offer } from '../../types/offer';
+import { setCity } from '../../store/offers/offers-slice';
 
 vi.mock('../../components/offer-card', () => ({
   default: ({ offer }: { offer: Offer }) => (
@@ -38,5 +39,29 @@ describe('Component: FavoritesList', () => {
 
     expect(screen.getByText(offerOne.title)).toBeInTheDocument();
     expect(screen.getByText(offerTwo.title)).toBeInTheDocument();
+  });
+
+  it('should dispatch "setCity" action when clicking on a city link', () => {
+    const targetCity = 'Amsterdam';
+    const offer = makeFakeOffer();
+    const mockFavoritesByCity = {
+      [targetCity]: [offer],
+    };
+
+    const { withStoreComponent, mockStore } = withStore(
+      <FavoritesList favoritesByCity={mockFavoritesByCity} />
+    );
+    const preparedComponent = withHistory(withStoreComponent);
+
+    render(preparedComponent);
+
+    const cityLink = screen.getByRole('link', { name: targetCity });
+    fireEvent.click(cityLink);
+
+    const actions = mockStore.getActions();
+
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe(setCity.type);
+    expect(actions[0].payload).toBe(targetCity);
   });
 });

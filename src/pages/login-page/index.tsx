@@ -1,11 +1,10 @@
 import { Link, Navigate } from 'react-router-dom';
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, memo, FormEvent, ChangeEvent, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { AuthorizationStatus, CITIES } from '../../const';
+import { AuthorizationStatus, CITIES, RequestStatus } from '../../const';
 import { setCity } from '../../store/offers';
-import { selectAuthorizationStatus } from '../../store/user';
+import { loginAction, selectAuthorizationStatus, selectUserRequestStatus } from '../../store/user';
 import { AppRoute } from '../../app/routes';
-import LoginForm from '../../components/login-form';
 import './login-page.css';
 
 const LoginHeader = memo(() => (
@@ -35,6 +34,7 @@ const CityLocationItem = memo(({ city, onClick }: CityLocationItemProps) => (
         className="locations__item-link"
         to={AppRoute.Main}
         onClick={onClick}
+        data-testid="login-city-link"
       >
         <span>{city}</span>
       </Link>
@@ -46,11 +46,44 @@ CityLocationItem.displayName = 'CityLocationItem';
 function LoginPage(): JSX.Element {
   const dispatch = useAppDispatch();
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
-  const [randomCity] = useState(() => CITIES[Math.floor(Math.random() * CITIES.length)]);
+  const requestStatus = useAppSelector(selectUserRequestStatus);
+
+  const randomCity = useMemo(() => CITIES[Math.floor(Math.random() * CITIES.length)], []);
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const isSubmitting = requestStatus === RequestStatus.Loading;
 
   const handleCityLinkClick = useCallback(() => {
     dispatch(setCity(randomCity));
   }, [dispatch, randomCity]);
+
+  const handleEmailChange = useCallback((evt: ChangeEvent<HTMLInputElement>) => {
+    setEmail(evt.target.value);
+    setErrorMessage(null);
+  }, []);
+
+  const handlePasswordChange = useCallback((evt: ChangeEvent<HTMLInputElement>) => {
+    setPassword(evt.target.value);
+    setErrorMessage(null);
+  }, []);
+
+  const handleSubmit = useCallback((evt: FormEvent<HTMLFormElement>) => {
+    evt.preventDefault();
+
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage('Email and password should not be empty.');
+      return;
+    }
+
+    dispatch(loginAction({ login: email, password }))
+      .unwrap()
+      .catch(() => {
+        setErrorMessage('Failed to sign in. Please try again.');
+      });
+  }, [dispatch, email, password]);
 
   if (authorizationStatus === AuthorizationStatus.Auth) {
     return <Navigate to={AppRoute.Main} />;
@@ -61,7 +94,61 @@ function LoginPage(): JSX.Element {
       <LoginHeader />
       <main className="page__main page__main--login">
         <div className="page__login-container container">
-          <LoginForm />
+          <section className="login">
+            <h1 className="login__title">Sign in</h1>
+            <form
+              className="login__form form"
+              action="#"
+              method="post"
+              onSubmit={handleSubmit}
+              noValidate
+              data-testid="login-form"
+            >
+              <div className="login__input-wrapper form__input-wrapper">
+                <label className="visually-hidden">E-mail</label>
+                <input
+                  className="login__input form__input"
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  required
+                  value={email}
+                  onChange={handleEmailChange}
+                  disabled={isSubmitting}
+                  data-testid="email-input"
+                />
+              </div>
+              <div className="login__input-wrapper form__input-wrapper">
+                <label className="visually-hidden">Password</label>
+                <input
+                  className="login__input form__input"
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  required
+                  value={password}
+                  onChange={handlePasswordChange}
+                  disabled={isSubmitting}
+                  data-testid="password-input"
+                />
+              </div>
+
+              {errorMessage && (
+                <div className="login__error-message" data-testid="login-error">
+                  {errorMessage}
+                </div>
+              )}
+
+              <button
+                className="login__submit form__submit button"
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Signing in...' : 'Sign in'}
+              </button>
+            </form>
+          </section>
+
           <CityLocationItem
             city={randomCity}
             onClick={handleCityLinkClick}

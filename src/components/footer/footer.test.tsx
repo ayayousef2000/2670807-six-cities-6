@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Routes, Route } from 'react-router-dom';
 import Footer from './index';
+import { AppRoute } from '../../app/routes';
 import { withHistory } from '../../utils/mock-component';
 
 describe('Component: Footer', () => {
@@ -16,5 +18,23 @@ describe('Component: Footer', () => {
     expect(logoImage).toBeInTheDocument();
     expect(logoImage.getAttribute('src')).toBe(expectedImgSrc);
     expect(linkElement).toBeInTheDocument();
+    expect(linkElement).toHaveAttribute('href', AppRoute.Main);
+  });
+
+  it('should redirect to root url when user clicks the logo link', () => {
+    const componentWithRouting = withHistory(
+      <Routes>
+        <Route path="/test" element={<Footer />} />
+        <Route path={AppRoute.Main} element={<div>Main Page Target</div>} />
+      </Routes>,
+      ['/test']
+    );
+
+    render(componentWithRouting);
+
+    const linkElement = screen.getByRole('link');
+    fireEvent.click(linkElement);
+
+    expect(screen.getByText('Main Page Target')).toBeInTheDocument();
   });
 });

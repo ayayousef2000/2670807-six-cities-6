@@ -1,56 +1,84 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
-import { describe, it, expect, vi } from 'vitest';
 import LoginPage from './index';
-import { withHistory, withStore } from '../../utils/mock-component';
 import { AppRoute } from '../../app/routes';
-import { AuthorizationStatus, RequestStatus } from '../../const';
-
-vi.mock('../../components/login-form', () => ({
-  default: () => <div data-testid="login-form">Login Form Content</div>,
-}));
+import { AuthorizationStatus, CITIES, NameSpace, RequestStatus } from '../../const';
+import { withHistory, withStore } from '../../utils/mock-component';
+import { setCity } from '../../store/offers/offers-slice';
+import { makeFakeUser } from '../../utils/mocks';
 
 describe('Page: LoginPage', () => {
-  it('should render login form and random city link when user is NOT authorized', () => {
-    const { withStoreComponent } = withStore(<LoginPage />, {
-      user: {
-        authorizationStatus: AuthorizationStatus.NoAuth,
-        user: null,
-        requestStatus: RequestStatus.Idle
-      },
-    });
-    const preparedComponent = withHistory(withStoreComponent);
 
-    render(preparedComponent);
+  it('should render correctly when user is NOT authorized', () => {
+    const { withStoreComponent } = withStore(
+      withHistory(<LoginPage />),
+      {
+        [NameSpace.User]: {
+          authorizationStatus: AuthorizationStatus.NoAuth,
+          user: null,
+          requestStatus: RequestStatus.Idle,
+        }
+      }
+    );
+
+    render(withStoreComponent);
 
     expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByAltText('6 cities logo')).toBeInTheDocument();
 
     const cityLink = screen.getByRole('link', { name: /^[a-zA-Z\s]+$/ });
     expect(cityLink).toBeInTheDocument();
-    expect(cityLink).toHaveAttribute('href', AppRoute.Main);
+    expect(CITIES).toContain(cityLink.textContent);
   });
 
-  it('should redirect to Main page if user IS authorized', () => {
-    const { withStoreComponent } = withStore(<LoginPage />, {
-      user: {
-        authorizationStatus: AuthorizationStatus.Auth,
-        user: null,
-        requestStatus: RequestStatus.Success
-      },
-    });
-
+  it('should redirect to Main Page when user IS authorized', () => {
     const componentWithRouting = (
       <Routes>
-        <Route path={AppRoute.Login} element={withStoreComponent} />
+        <Route path={AppRoute.Login} element={<LoginPage />} />
         <Route path={AppRoute.Main} element={<h1>Main Page Redirected</h1>} />
       </Routes>
     );
 
-    const preparedComponent = withHistory(componentWithRouting, [AppRoute.Login]);
+    const { withStoreComponent } = withStore(
+      withHistory(componentWithRouting, [AppRoute.Login]),
+      {
+        [NameSpace.User]: {
+          authorizationStatus: AuthorizationStatus.Auth,
+          user: makeFakeUser(),
+          requestStatus: RequestStatus.Success,
+        }
+      }
+    );
 
-    render(preparedComponent);
+    render(withStoreComponent);
 
     expect(screen.getByText('Main Page Redirected')).toBeInTheDocument();
     expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
+  });
+
+  it('should dispatch "setCity" action when clicking the random city link', () => {
+    const { withStoreComponent, mockStore } = withStore(
+      withHistory(<LoginPage />),
+      {
+        [NameSpace.User]: {
+          authorizationStatus: AuthorizationStatus.NoAuth,
+          user: null,
+          requestStatus: RequestStatus.Idle,
+        }
+      }
+    );
+
+    render(withStoreComponent);
+
+    const cityLink = screen.getByRole('link', { name: /^[a-zA-Z\s]+$/ });
+    const renderedCityName = cityLink.textContent;
+
+    fireEvent.click(cityLink);
+
+    const actions = mockStore.getActions();
+
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe(setCity.type);
+    expect(actions[0].payload).toBe(renderedCityName);
   });
 });
