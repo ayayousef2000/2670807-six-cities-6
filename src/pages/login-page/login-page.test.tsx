@@ -7,10 +7,6 @@ import { withHistory, withStore } from '../../utils/mock-component';
 import { setCity } from '../../store/offers/offers-slice';
 import { makeFakeUser } from '../../utils/mocks';
 
-vi.mock('../../components/login-form', () => ({
-  default: () => <div data-testid="login-form">Login Form Component</div>,
-}));
-
 describe('Page: LoginPage', () => {
 
   it('should render correctly when user is NOT authorized', () => {
