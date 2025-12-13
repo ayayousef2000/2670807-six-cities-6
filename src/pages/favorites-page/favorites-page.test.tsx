@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import FavoritesPage from './index';
+import FavoritesPage from './favorites-page';
 import { RequestStatus, NameSpace } from '../../const';
 import { makeFakeOffer } from '../../utils/mocks';
 import { withStore, withHistory } from '../../utils/mock-component';

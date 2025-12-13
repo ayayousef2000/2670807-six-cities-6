@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import OfferCard from './index';
+import OfferCard from './offer-card';
 import { withHistory } from '../../utils/mock-component';
 import { makeFakeOffer } from '../../utils/mocks';
 

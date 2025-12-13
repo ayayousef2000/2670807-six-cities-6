@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { vi, describe, it, expect } from 'vitest';
-import LoginPage from './index';
+import LoginPage from './login-page';
 import { AppRoute } from '../../app/routes';
 import { AuthorizationStatus, CITIES, RequestStatus, NameSpace } from '../../const';
 import { withHistory, withStore } from '../../utils/mock-component';

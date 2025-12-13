@@ -5,7 +5,7 @@ import FavoritesPage from '../pages/favorites-page';
 import OfferPage from '../pages/offer-page';
 import NotFoundPage from '../pages/not-found-page';
 import { AppRoute } from './routes';
-import { PrivateRoute } from '../components/private-route';
+import PrivateRoute from '../components/private-route';
 import Layout from '../components/layout';
 
 export function AppRouter(): JSX.Element {

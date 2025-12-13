@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import { Marker, layerGroup } from 'leaflet';
-import Map from './index';
+import Map from './map';
 import { makeFakeCity, makeFakeOffer } from '../../utils/mocks';
 
 const mockLayerGroupInstance = {

@@ -9,7 +9,7 @@ type PrivateRouteProps = {
   children: JSX.Element;
 };
 
-export function PrivateRoute({ children }: PrivateRouteProps): JSX.Element {
+function PrivateRoute({ children }: PrivateRouteProps): JSX.Element {
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
 
   if (authorizationStatus === AuthorizationStatus.Unknown) {
@@ -22,3 +22,5 @@ export function PrivateRoute({ children }: PrivateRouteProps): JSX.Element {
       : <Navigate to={AppRoute.Login} />
   );
 }
+
+export default PrivateRoute;

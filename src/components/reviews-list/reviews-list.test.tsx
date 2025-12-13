@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import ReviewsList from './index';
+import ReviewsList from './reviews-list';
 import { withHistory } from '../../utils/mock-component';
 import { makeFakeReview } from '../../utils/mocks';
 import { Review } from '../../types/review';

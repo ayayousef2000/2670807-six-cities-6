@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
 import { vi, describe, it, expect } from 'vitest';
-import Layout from './index';
+import Layout from './layout';
 import { NameSpace, RequestStatus, AuthorizationStatus } from '../../const';
 import { withHistory, withStore } from '../../utils/mock-component';
 import { makeFakeOffer } from '../../utils/mocks';

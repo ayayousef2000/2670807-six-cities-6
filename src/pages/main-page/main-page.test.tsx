@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import MainPage from './index';
+import MainPage from './main-page';
 import { makeFakeOffer } from '../../utils/mocks';
 import { CITIES, SortOption, NameSpace, RequestStatus } from '../../const';
 import { withHistory, withStore } from '../../utils/mock-component';

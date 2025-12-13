@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { Action } from 'redux';
-import OfferPage from './index';
+import OfferPage from './offer-page';
 import { AuthorizationStatus, RequestStatus, NameSpace } from '../../const';
 import { withStore } from '../../utils/mock-component';
 import { makeFakeOffer } from '../../utils/mocks';

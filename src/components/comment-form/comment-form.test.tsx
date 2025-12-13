@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import CommentForm from './index';
+import CommentForm from './comment-form';
 import { withHistory, withStore } from '../../utils/mock-component';
 import { NameSpace, RequestStatus } from '../../const';
 import * as ReviewsStore from '../../store/reviews';
