@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { faker } from '@faker-js/faker';
-import MainEmpty from './index';
+import MainEmpty from './main-empty';
 
 describe('Component: MainEmpty', () => {
   it('should render correct text with the provided city name', () => {

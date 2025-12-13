@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
-import Footer from './index';
+import Footer from './footer';
 import { AppRoute } from '../../app/routes';
 import { withHistory } from '../../utils/mock-component';
 

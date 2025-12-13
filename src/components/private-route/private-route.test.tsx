@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
-import { PrivateRoute } from './index';
+import PrivateRoute from './private-route';
 import { AuthorizationStatus, NameSpace, RequestStatus } from '../../const';
 import { withHistory, withStore } from '../../utils/mock-component';
 import { AppRoute } from '../../app/routes';

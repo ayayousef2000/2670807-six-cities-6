@@ -46,13 +46,18 @@ const OfferGallery = memo(({ images, title }: { images: string[]; title: string 
 ));
 OfferGallery.displayName = 'OfferGallery';
 
-const OfferFeatures = memo(({ type, bedrooms, maxAdults }: { type: string; bedrooms: number; maxAdults: number }) => (
-  <ul className="offer__features">
-    <li className="offer__feature offer__feature--entire">{type}</li>
-    <li className="offer__feature offer__feature--bedrooms">{bedrooms} Bedrooms</li>
-    <li className="offer__feature offer__feature--adults">Max {maxAdults} adults</li>
-  </ul>
-));
+const OfferFeatures = memo(({ type, bedrooms, maxAdults }: { type: string; bedrooms: number; maxAdults: number }) => {
+  const bedroomText = bedrooms > 1 ? 'Bedrooms' : 'Bedroom';
+  const adultText = maxAdults > 1 ? 'adults' : 'adult';
+
+  return (
+    <ul className="offer__features">
+      <li className="offer__feature offer__feature--entire">{type}</li>
+      <li className="offer__feature offer__feature--bedrooms">{bedrooms} {bedroomText}</li>
+      <li className="offer__feature offer__feature--adults">Max {maxAdults} {adultText}</li>
+    </ul>
+  );
+});
 OfferFeatures.displayName = 'OfferFeatures';
 
 const OfferInside = memo(({ goods }: { goods: string[] }) => (
@@ -136,13 +141,11 @@ function OfferPageComponent(): JSX.Element {
 
   if (offerStatus === RequestStatus.Loading || offerStatus === RequestStatus.Idle) {
     return (
-      <div className="page">
-        <main className="page__main page__main--offer">
-          <div className="container offer__spinner-container">
-            <Spinner />
-          </div>
-        </main>
-      </div>
+      <main className="page__main page__main--offer">
+        <div className="container offer__spinner-container">
+          <Spinner />
+        </div>
+      </main>
     );
   }
 
@@ -152,21 +155,19 @@ function OfferPageComponent(): JSX.Element {
 
   if (offerStatus === RequestStatus.Error || !offer) {
     return (
-      <div className="page">
-        <main className="page__main page__main--offer">
-          <div className="container">
-            <section className="offer__no-data">
-              <b className="cities__status">Failed to load data</b>
-              <p className="cities__status-description">
-                Please check your internet connection or try again later.
-              </p>
-              <button className="button form__submit offer__no-data-button" onClick={loadData}>
-                Try Again
-              </button>
-            </section>
-          </div>
-        </main>
-      </div>
+      <main className="page__main page__main--offer">
+        <div className="container">
+          <section className="offer__no-data">
+            <b className="cities__status">Failed to load data</b>
+            <p className="cities__status-description">
+              Please check your internet connection or try again later.
+            </p>
+            <button className="button form__submit offer__no-data-button" onClick={loadData}>
+              Try Again
+            </button>
+          </section>
+        </div>
+      </main>
     );
   }
 
@@ -174,98 +175,96 @@ function OfferPageComponent(): JSX.Element {
   const ratingWidth = getRatingWidth(rating);
 
   return (
-    <div className="page">
-      <main className="page__main page__main--offer">
-        <section className="offer">
-          <OfferGallery images={images} title={title} />
+    <main className="page__main page__main--offer">
+      <section className="offer">
+        <OfferGallery images={images} title={title} />
 
-          <div className="offer__container container">
-            <div className="offer__wrapper">
-              {isPremium && (
-                <div className="offer__mark">
-                  <span>Premium</span>
+        <div className="offer__container container">
+          <div className="offer__wrapper">
+            {isPremium && (
+              <div className="offer__mark">
+                <span>Premium</span>
+              </div>
+            )}
+
+            <div className="offer__name-wrapper">
+              <h1 className="offer__name">{title}</h1>
+              <button
+                className={`offer__bookmark-button ${isFavorite ? 'offer__bookmark-button--active' : ''} button`}
+                type="button"
+                onClick={handleFavoriteClick}
+                disabled={isFavoriteSubmitting}
+              >
+                <svg className="offer__bookmark-icon" width="31" height="33">
+                  <use xlinkHref="#icon-bookmark"></use>
+                </svg>
+                <span className="visually-hidden">To bookmarks</span>
+              </button>
+            </div>
+
+            <div className="offer__rating rating">
+              <div className="offer__stars rating__stars">
+                <span style={{ width: ratingWidth }}></span>
+                <span className="visually-hidden">Rating</span>
+              </div>
+              <span className="offer__rating-value rating__value">{rating}</span>
+            </div>
+
+            <OfferFeatures type={type} bedrooms={bedrooms} maxAdults={maxAdults} />
+
+            <div className="offer__price">
+              <b className="offer__price-value">&euro;{price}</b>
+              <span className="offer__price-text">&nbsp;night</span>
+            </div>
+
+            <OfferInside goods={goods} />
+
+            <OfferHost host={host} description={description} />
+
+            <section className="offer__reviews reviews">
+              {reviewsStatus === RequestStatus.Error ? (
+                <div className="reviews__error">
+                  <p className="reviews__error-text">Failed to load reviews.</p>
+                  <button className="reviews__retry-button" onClick={handleRetryReviews}>
+                    Try again
+                  </button>
                 </div>
+              ) : (
+                <>
+                  <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">{reviews.length}</span></h2>
+                  <ReviewsList reviews={reviews} />
+                </>
               )}
 
-              <div className="offer__name-wrapper">
-                <h1 className="offer__name">{title}</h1>
-                <button
-                  className={`offer__bookmark-button ${isFavorite ? 'offer__bookmark-button--active' : ''} button`}
-                  type="button"
-                  onClick={handleFavoriteClick}
-                  disabled={isFavoriteSubmitting}
-                >
-                  <svg className="offer__bookmark-icon" width="31" height="33">
-                    <use xlinkHref="#icon-bookmark"></use>
-                  </svg>
-                  <span className="visually-hidden">To bookmarks</span>
-                </button>
-              </div>
-
-              <div className="offer__rating rating">
-                <div className="offer__stars rating__stars">
-                  <span style={{ width: ratingWidth }}></span>
-                  <span className="visually-hidden">Rating</span>
-                </div>
-                <span className="offer__rating-value rating__value">{rating}</span>
-              </div>
-
-              <OfferFeatures type={type} bedrooms={bedrooms} maxAdults={maxAdults} />
-
-              <div className="offer__price">
-                <b className="offer__price-value">&euro;{price}</b>
-                <span className="offer__price-text">&nbsp;night</span>
-              </div>
-
-              <OfferInside goods={goods} />
-
-              <OfferHost host={host} description={description} />
-
-              <section className="offer__reviews reviews">
-                {reviewsStatus === RequestStatus.Error ? (
-                  <div className="reviews__error">
-                    <p className="reviews__error-text">Failed to load reviews.</p>
-                    <button className="reviews__retry-button" onClick={handleRetryReviews}>
-                      Try again
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">{reviews.length}</span></h2>
-                    <ReviewsList reviews={reviews} />
-                  </>
-                )}
-
-                {isAuthorized && <CommentForm />}
-              </section>
-            </div>
+              {isAuthorized && <CommentForm />}
+            </section>
           </div>
-
-          <Map
-            className="offer__map map"
-            city={city}
-            points={mapPoints}
-            selectedPoint={offer}
-          />
-        </section>
-
-        <div className="container">
-          <section className="near-places places">
-            <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            {nearPlacesStatus === RequestStatus.Error ? (
-              <div className="near-places__error">
-                <p className="near-places__error-text">Failed to load nearby places.</p>
-                <button className="near-places__retry-button" onClick={handleRetryNearPlaces}>
-                  Try again
-                </button>
-              </div>
-            ) : (
-              <OfferList offers={nearPlaces} variant="near-places" />
-            )}
-          </section>
         </div>
-      </main>
-    </div>
+
+        <Map
+          className="offer__map map"
+          city={city}
+          points={mapPoints}
+          selectedPoint={offer}
+        />
+      </section>
+
+      <div className="container">
+        <section className="near-places places">
+          <h2 className="near-places__title">Other places in the neighbourhood</h2>
+          {nearPlacesStatus === RequestStatus.Error ? (
+            <div className="near-places__error">
+              <p className="near-places__error-text">Failed to load nearby places.</p>
+              <button className="near-places__retry-button" onClick={handleRetryNearPlaces}>
+                Try again
+              </button>
+            </div>
+          ) : (
+            <OfferList offers={nearPlaces} variant="near-places" />
+          )}
+        </section>
+      </div>
+    </main>
   );
 }
 

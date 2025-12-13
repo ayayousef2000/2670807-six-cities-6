@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import OfferList from './index';
+import OfferList from './offer-list';
 import { withHistory } from '../../utils/mock-component';
 import { makeFakeOffer } from '../../utils/mocks';
 import { Offer } from '../../types/offer';

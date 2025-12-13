@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
-import SortOptions from './index';
+import SortOptions from './sort-options';
 import { SortOption } from '../../const';
 
 describe('Component: SortOptions', () => {

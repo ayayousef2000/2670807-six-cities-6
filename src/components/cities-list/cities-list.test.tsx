@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { faker } from '@faker-js/faker';
 import { describe, it, expect, vi } from 'vitest';
-import CitiesList from './index';
+import CitiesList from './cities-list';
 
 describe('Component: CitiesList', () => {
   it('should render all cities and highlight the active one', () => {
