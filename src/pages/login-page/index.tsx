@@ -78,10 +78,17 @@ function LoginPage(): JSX.Element {
       return;
     }
 
+    const passwordRegex = /^(?=.*[0-9])(?=.*[a-zA-Z])/;
+
+    if (!passwordRegex.test(password)) {
+      setErrorMessage('Password must contain at least one letter and one number.');
+      return;
+    }
+
     dispatch(loginAction({ login: email, password }))
       .unwrap()
-      .catch(() => {
-        setErrorMessage('Failed to sign in. Please try again.');
+      .catch((serverError) => {
+        setErrorMessage(serverError as string);
       });
   }, [dispatch, email, password]);
 

@@ -68,11 +68,9 @@ function MainPage(): JSX.Element {
 
   if (isOffersDataLoading) {
     return (
-      <div className="page page--gray page--main">
-        <main className="page__main page__main--index">
-          <Spinner />
-        </main>
-      </div>
+      <main className="page__main page__main--index">
+        <Spinner />
+      </main>
     );
   }
 
@@ -118,38 +116,36 @@ function MainPage(): JSX.Element {
   };
 
   return (
-    <div className="page page--gray page--main">
-      <main className={`page__main page__main--index ${isMainEmpty ? 'page__main--index-empty' : ''}`}>
-        <h1 className="visually-hidden">Cities</h1>
+    <main className={`page__main page__main--index ${isMainEmpty ? 'page__main--index-empty' : ''}`}>
+      <h1 className="visually-hidden">Cities</h1>
 
-        <div className="tabs">
-          <CitiesList
-            cities={CITIES}
-            currentCity={currentCity}
-            onCityChange={handleCityChange}
-          />
-        </div>
+      <div className="tabs">
+        <CitiesList
+          cities={CITIES}
+          currentCity={currentCity}
+          onCityChange={handleCityChange}
+        />
+      </div>
 
-        <div className="cities">
-          <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
+      <div className="cities">
+        <div className={`cities__places-container ${isMainEmpty ? 'cities__places-container--empty' : ''} container`}>
 
-            {renderContent()}
+          {renderContent()}
 
-            <div className="cities__right-section">
-              {!isMainEmpty && !error && (
-                <Map
-                  city={cityOffers[0].city}
-                  points={cityOffers}
-                  selectedPoint={selectedPoint}
-                  className="cities__map"
-                />
-              )}
-            </div>
-
+          <div className="cities__right-section">
+            {!isMainEmpty && !error && (
+              <Map
+                city={cityOffers[0].city}
+                points={cityOffers}
+                selectedPoint={selectedPoint}
+                className="cities__map"
+              />
+            )}
           </div>
+
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
 

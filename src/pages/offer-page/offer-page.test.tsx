@@ -1,12 +1,57 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { Action } from 'redux';
 import OfferPage from './index';
 import { AuthorizationStatus, RequestStatus, NameSpace } from '../../const';
 import { withStore } from '../../utils/mock-component';
-import { State } from '../../types/state';
 import { makeFakeOffer } from '../../utils/mocks';
+import { State } from '../../types/state';
+
+const makeMockOfferPageState = (overrides: Partial<State> = {}): State => {
+  const defaultState = {
+    [NameSpace.Offer]: {
+      offer: null,
+      offerStatus: RequestStatus.Idle,
+    },
+    [NameSpace.Reviews]: {
+      reviews: [],
+      status: RequestStatus.Idle,
+      sendingStatus: RequestStatus.Idle,
+      sendingError: null,
+    },
+    [NameSpace.NearPlaces]: {
+      nearPlaces: [],
+      nearPlacesStatus: RequestStatus.Idle,
+    },
+    [NameSpace.User]: {
+      authorizationStatus: AuthorizationStatus.Unknown,
+      user: null,
+      requestStatus: RequestStatus.Idle,
+    },
+  };
+  return { ...defaultState, ...overrides } as State;
+};
+
+const detailedOffer = {
+  ...makeFakeOffer(),
+  isPremium: true,
+  price: 500,
+  images: Array.from({ length: 10 }, (_, i) => `img${i}.jpg`),
+  title: 'Luxury Villa'
+};
+
+const offerWithPlurals = {
+  ...makeFakeOffer(),
+  bedrooms: 3,
+  maxAdults: 2,
+};
+
+const offerWithSingulars = {
+  ...makeFakeOffer(),
+  bedrooms: 1,
+  maxAdults: 1,
+};
 
 const { mockHandleFavoriteClick } = vi.hoisted(() => ({
   mockHandleFavoriteClick: vi.fn(),
@@ -66,32 +111,6 @@ vi.mock('../../store/near-places', async () => {
 });
 
 describe('Page: OfferPage', () => {
-
-  const makeMockState = (overrides: Partial<State> = {}) => {
-    const defaultState = {
-      [NameSpace.Offer]: {
-        offer: null,
-        offerStatus: RequestStatus.Idle,
-      },
-      [NameSpace.Reviews]: {
-        reviews: [],
-        status: RequestStatus.Idle,
-        sendingStatus: RequestStatus.Idle,
-        sendingError: null,
-      },
-      [NameSpace.NearPlaces]: {
-        nearPlaces: [],
-        nearPlacesStatus: RequestStatus.Idle,
-      },
-      [NameSpace.User]: {
-        authorizationStatus: AuthorizationStatus.Unknown,
-        user: null,
-        requestStatus: RequestStatus.Idle,
-      },
-    };
-    return { ...defaultState, ...overrides } as State;
-  };
-
   beforeAll(() => {
     Object.defineProperty(window, 'scrollTo', { value: vi.fn(), writable: true });
   });
@@ -105,7 +124,10 @@ describe('Page: OfferPage', () => {
   );
 
   it('should dispatch fetch actions for Offer, Reviews, and NearPlaces on mount', () => {
-    const { withStoreComponent, mockStore } = withStore(getComponentWithRouter(), makeMockState());
+    const { withStoreComponent, mockStore } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState()
+    );
 
     render(withStoreComponent);
 
@@ -117,9 +139,12 @@ describe('Page: OfferPage', () => {
   });
 
   it('should dispatch drop actions on unmount to clear state', () => {
-    const { withStoreComponent, mockStore } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
-    }));
+    const { withStoreComponent, mockStore } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
+      })
+    );
 
     const { unmount } = render(withStoreComponent);
 
@@ -132,9 +157,12 @@ describe('Page: OfferPage', () => {
   });
 
   it('should render Spinner when offerStatus is Loading', () => {
-    const { withStoreComponent } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: null, offerStatus: RequestStatus.Loading },
-    }));
+    const { withStoreComponent } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: null, offerStatus: RequestStatus.Loading },
+      })
+    );
 
     render(withStoreComponent);
 
@@ -142,9 +170,12 @@ describe('Page: OfferPage', () => {
   });
 
   it('should render NotFoundPage when offerStatus is NotFound', () => {
-    const { withStoreComponent } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: null, offerStatus: RequestStatus.NotFound },
-    }));
+    const { withStoreComponent } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: null, offerStatus: RequestStatus.NotFound },
+      })
+    );
 
     render(withStoreComponent);
 
@@ -152,9 +183,12 @@ describe('Page: OfferPage', () => {
   });
 
   it('should render Error view with "Try Again" button when offerStatus is Error', () => {
-    const { withStoreComponent, mockStore } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: null, offerStatus: RequestStatus.Error },
-    }));
+    const { withStoreComponent, mockStore } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: null, offerStatus: RequestStatus.Error },
+      })
+    );
 
     render(withStoreComponent);
 
@@ -169,20 +203,15 @@ describe('Page: OfferPage', () => {
   });
 
   it('should render offer content correctly (Premium, Price, Image slicing)', () => {
-    const detailedOffer = {
-      ...makeFakeOffer(),
-      isPremium: true,
-      price: 500,
-      images: Array.from({ length: 10 }, (_, i) => `img${i}.jpg`),
-      title: 'Luxury Villa'
-    };
-
-    const { withStoreComponent } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: detailedOffer, offerStatus: RequestStatus.Success },
-      [NameSpace.Reviews]: { reviews: [], status: RequestStatus.Success, sendingStatus: RequestStatus.Idle, sendingError: null },
-      [NameSpace.NearPlaces]: { nearPlaces: [], nearPlacesStatus: RequestStatus.Success },
-      [NameSpace.User]: { authorizationStatus: AuthorizationStatus.Auth, user: null, requestStatus: RequestStatus.Idle },
-    }));
+    const { withStoreComponent } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: detailedOffer, offerStatus: RequestStatus.Success },
+        [NameSpace.Reviews]: { reviews: [], status: RequestStatus.Success, sendingStatus: RequestStatus.Idle, sendingError: null },
+        [NameSpace.NearPlaces]: { nearPlaces: [], nearPlacesStatus: RequestStatus.Success },
+        [NameSpace.User]: { authorizationStatus: AuthorizationStatus.Auth, user: null, requestStatus: RequestStatus.Idle },
+      })
+    );
 
     render(withStoreComponent);
 
@@ -198,30 +227,39 @@ describe('Page: OfferPage', () => {
   });
 
   it('should render CommentForm ONLY when user is Authorized', () => {
-    const { withStoreComponent } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
-      [NameSpace.User]: { authorizationStatus: AuthorizationStatus.Auth, user: null, requestStatus: RequestStatus.Idle },
-    }));
+    const { withStoreComponent } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
+        [NameSpace.User]: { authorizationStatus: AuthorizationStatus.Auth, user: null, requestStatus: RequestStatus.Idle },
+      })
+    );
 
     render(withStoreComponent);
     expect(screen.getByTestId('comment-form')).toBeInTheDocument();
   });
 
   it('should NOT render CommentForm when user is Guest', () => {
-    const { withStoreComponent } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
-      [NameSpace.User]: { authorizationStatus: AuthorizationStatus.NoAuth, user: null, requestStatus: RequestStatus.Idle },
-    }));
+    const { withStoreComponent } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
+        [NameSpace.User]: { authorizationStatus: AuthorizationStatus.NoAuth, user: null, requestStatus: RequestStatus.Idle },
+      })
+    );
 
     render(withStoreComponent);
     expect(screen.queryByTestId('comment-form')).not.toBeInTheDocument();
   });
 
   it('should handle bookmark button click', () => {
-    const { withStoreComponent } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
-      [NameSpace.User]: { authorizationStatus: AuthorizationStatus.Auth, user: null, requestStatus: RequestStatus.Idle },
-    }));
+    const { withStoreComponent } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
+        [NameSpace.User]: { authorizationStatus: AuthorizationStatus.Auth, user: null, requestStatus: RequestStatus.Idle },
+      })
+    );
 
     render(withStoreComponent);
 
@@ -232,12 +270,15 @@ describe('Page: OfferPage', () => {
   });
 
   it('should display error messages and retry buttons for Reviews and NearPlaces sections', () => {
-    const { withStoreComponent, mockStore } = withStore(getComponentWithRouter(), makeMockState({
-      [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
-      [NameSpace.Reviews]: { reviews: [], status: RequestStatus.Error, sendingStatus: RequestStatus.Idle, sendingError: null },
-      [NameSpace.NearPlaces]: { nearPlaces: [], nearPlacesStatus: RequestStatus.Error },
-      [NameSpace.User]: { authorizationStatus: AuthorizationStatus.Auth, user: null, requestStatus: RequestStatus.Idle },
-    }));
+    const { withStoreComponent, mockStore } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: makeFakeOffer(), offerStatus: RequestStatus.Success },
+        [NameSpace.Reviews]: { reviews: [], status: RequestStatus.Error, sendingStatus: RequestStatus.Idle, sendingError: null },
+        [NameSpace.NearPlaces]: { nearPlaces: [], nearPlacesStatus: RequestStatus.Error },
+        [NameSpace.User]: { authorizationStatus: AuthorizationStatus.Auth, user: null, requestStatus: RequestStatus.Idle },
+      })
+    );
 
     render(withStoreComponent);
 
@@ -253,5 +294,33 @@ describe('Page: OfferPage', () => {
     const actions = mockStore.getActions().map((a: Action<string>) => a.type);
     expect(actions).toContain('reviews/fetch');
     expect(actions).toContain('nearPlaces/fetch');
+  });
+
+  it('should render plural text for bedrooms and adults when count > 1', () => {
+    const { withStoreComponent } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: offerWithPlurals, offerStatus: RequestStatus.Success },
+      })
+    );
+
+    render(withStoreComponent);
+
+    expect(screen.getByText('3 Bedrooms')).toBeInTheDocument();
+    expect(screen.getByText('Max 2 adults')).toBeInTheDocument();
+  });
+
+  it('should render singular text for bedrooms and adults when count is 1', () => {
+    const { withStoreComponent } = withStore(
+      getComponentWithRouter(),
+      makeMockOfferPageState({
+        [NameSpace.Offer]: { offer: offerWithSingulars, offerStatus: RequestStatus.Success },
+      })
+    );
+
+    render(withStoreComponent);
+
+    expect(screen.getByText('1 Bedroom')).toBeInTheDocument();
+    expect(screen.getByText('Max 1 adult')).toBeInTheDocument();
   });
 });

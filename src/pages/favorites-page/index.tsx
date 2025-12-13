@@ -26,21 +26,21 @@ function FavoritesPage(): JSX.Element {
 
   if (requestStatus === RequestStatus.Loading) {
     return (
-      <div className="page">
+      <>
         <main className="page__main page__main--favorites">
           <div className="container favorites__loading">
             <Spinner />
           </div>
         </main>
         <Footer />
-      </div>
+      </>
     );
   }
 
   const hasFavorites = favorites.length > 0;
 
   return (
-    <div className={`page ${!hasFavorites ? 'page--favorites-empty' : ''}`}>
+    <>
       <main className={`page__main page__main--favorites ${!hasFavorites ? 'page__main--favorites-empty' : ''}`}>
         <div className="page__favorites-container container">
           {hasFavorites ? (
@@ -51,7 +51,7 @@ function FavoritesPage(): JSX.Element {
         </div>
       </main>
       <Footer />
-    </div>
+    </>
   );
 }
 

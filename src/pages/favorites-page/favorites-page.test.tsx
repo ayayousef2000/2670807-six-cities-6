@@ -78,9 +78,6 @@ describe('Page: FavoritesPage', () => {
     expect(screen.getByTestId('favorites-empty')).toBeInTheDocument();
     expect(screen.queryByTestId('favorites-list')).not.toBeInTheDocument();
 
-    const pageWrapper = container.querySelector('.page');
-    expect(pageWrapper).toHaveClass('page--favorites-empty');
-
     const mainWrapper = container.querySelector('.page__main');
     expect(mainWrapper).toHaveClass('page__main--favorites-empty');
   });
@@ -101,7 +98,7 @@ describe('Page: FavoritesPage', () => {
     expect(screen.queryByTestId('favorites-empty')).not.toBeInTheDocument();
     expect(screen.getByTestId('favorites-list')).toHaveTextContent('Items count: 1');
 
-    const pageWrapper = container.querySelector('.page');
-    expect(pageWrapper).not.toHaveClass('page--favorites-empty');
+    const mainWrapper = container.querySelector('.page__main');
+    expect(mainWrapper).not.toHaveClass('page__main--favorites-empty');
   });
 });
